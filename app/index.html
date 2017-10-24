@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!--<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>-->
+	<script>
+	//window.nodeRequire = require; 
+	//delete window.require;
+	//delete window.exports; delete window.module;
+	window.onload = function () {
+            const remote = require('electron').remote;
+
+			document.getElementById("min-btn").addEventListener("click", function (e) {
+				var window = remote.getCurrentWindow();
+				window.minimize(); 
+			});
+
+			document.getElementById("max-btn").addEventListener("click", function (e) {
+				var window = remote.getCurrentWindow();
+				    if (!window.isMaximized()) {
+					    window.maximize();
+				} else {
+					window.unmaximize();
+				}
+			});
+
+			document.getElementById("close-btn").addEventListener("click", function (e) {
+				var window = remote.getCurrentWindow();
+				window.close();
+			}); 
+        }
+	</script>
+	<style>
+		* {
+			margin: 0px;
+			padding: 0px;
+		}
+		body, html {
+			height: 100%;
+			width: 100%;
+		}
+		webview {
+			height: 100%;
+			width: 100%;
+			border: none;
+		}
+		#dragBar {
+			width: calc(100% - 250px);
+			height: 30px;
+			position: fixed;
+			right: 0px;
+			top: 5px;
+			background-color: transparent;
+			-webkit-app-region: drag;
+		}
+		button {
+			height: 35px;
+			margin-top: -5px;
+			width: 45px;
+			border: none;
+			background-color: transparent;
+			float: right;
+			-webkit-app-region: no-drag;
+			color: #ccc;
+			outline: none;
+			background-repeat: no-repeat;
+			background-size: 100%;
+			background-position: center;
+		}
+		#close-btn {
+			background-image: url(img/close.png);
+		}
+		#max-btn {
+			background-image: url(img/maximize.png);
+		}
+		#min-btn {
+			background-image: url(img/minimize.png);
+		}
+		button:hover {
+			background-color: #8469b7;
+		}
+		#close-btn:hover {
+			background-color: #FF3935;
+		}
+	</style>
+</head>
+<body>
+	<div id="dragBar" >
+		<button id="close-btn"></button>
+		<button id="max-btn"></button>
+		<button id="min-btn"></button>
+	</div>
+	<webview src="https://chats.c0ldplasma.de"></webview>
+</body>
+</html>
