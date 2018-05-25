@@ -794,6 +794,12 @@ function addChat(channel, channelId) {
 
     $('.chat[id$=\'' + channelLC + '\']').resizable({
         handles: 'e',
+        start: function(event, ui) {
+            $('iframe').css('pointer-events', 'none');
+        },
+        stop: function(event, ui) {
+            $('iframe').css('pointer-events', 'auto');
+        },
     });
     $('.chatInputField[id$=\'' + channelLC + '\']').keydown(function(event) {
         if (event.keyCode === 13) {
