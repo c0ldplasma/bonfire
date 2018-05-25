@@ -1,9 +1,16 @@
 /**
- * @param data          Information about the object.
+ * @param data
  * @param data.users
  * @param data.users.display_name
  * @param data.logo
  * @param ffzGlobal.default_sets
+ * @param data.chatter_count
+ * @param data.chatters
+ * @param chatters.moderators
+ * @param chatters.viewers
+ * @param chatters.global_mods
+ * @param chatters.admins
+ * @param chatters.staff
  */
 
 /**
@@ -174,7 +181,7 @@ function addMessage(msg) {
         let infoMessage = '';
         chatInput.find('p').remove();
         for (let j = 0; j < roomstateMsg.length; j++) {
-            info = roomstateMsg[j].split('=');
+            let info = roomstateMsg[j].split('=');
             let infoKeyword = info[0];
             switch (infoKeyword) {
                 case 'broadcaster-lang':
@@ -439,7 +446,7 @@ function addMessage(msg) {
 
         // Put badges in message
         for (let j = 0; j < metaInfo.badges.length; j++) {
-            badge = metaInfo.badges[j].split('/');
+            let badge = metaInfo.badges[j].split('/');
             let badgeGroup = badgesChannels[channelLC][badge[0]];
             if (badge[0].localeCompare('subscriber') === 0) {
                 newElement.find('span:nth-of-type(2):first').before(
@@ -524,9 +531,9 @@ function addMessage(msg) {
 function addChat(channel, channelId) {
     let channelLC = channel.toLowerCase();
 
-    let chatEl = $('.chat[id$=\'' + channelLC + '\']');
+    let $chat = $('.chat[id$=\'' + channelLC + '\']');
 
-    if (chatEl.length !== 0) {
+    if ($chat.length) {
         return;
     } // If chat already added do not add another one
 
@@ -562,8 +569,7 @@ function addChat(channel, channelId) {
         '<div class="ffzChannelEmotes" style="width: 100%;">' +
         '<h3>FFZ Channel Emotes</h3></div>' +
         '</div></div></div>'
-        + '<div class="chatViewerlist" id="' + channelLC + '"></div>'
-        + '<div>');
+        + '<div class="chatViewerlist" id="' + channelLC + '"></div>');
 
     // Add Emotes to Emote Menu
     // Twitch Global
@@ -786,7 +792,7 @@ function addChat(channel, channelId) {
         toggleVL++;
     });
 
-    chatEl.resizable({
+    $('.chat[id$=\'' + channelLC + '\']').resizable({
         handles: 'e',
     });
     $('.chatInputField[id$=\'' + channelLC + '\']').keydown(function(event) {
@@ -807,19 +813,18 @@ function addChat(channel, channelId) {
             }
         }
     });
-    $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').click(function(event) {
+    $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').click(function() {
         $(this).hide();
-        let chatContentEl = $('#' + channelLC + ' .chatContent');
-        chatContentEl
-            .scrollTop(chatContentEl[0].scrollHeight);
+        let $chatContent = $('#' + channelLC + ' .chatContent');
+        $chatContent.scrollTop($chatContent[0].scrollHeight);
     });
-    let emoteMenuEl = $('.chatInput[id$=\'' + channelLC+'\'] .emoteMenu');
-    $('.chatInput[id$=\'' + channelLC + '\'] .kappa').click(function(event) {
-        if (emoteMenuEl.is(':hidden')) {
+    let $emoteMenu = $('.chatInput[id$=\'' + channelLC+'\'] .emoteMenu');
+    $('.chatInput[id$=\'' + channelLC + '\'] .kappa').click(function() {
+        if ($emoteMenu.is(':hidden')) {
             $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu').show();
         } else {
-            emoteMenuEl.hide();
-            emoteMenuEl.css({
+            $emoteMenu.hide();
+            $emoteMenu.css({
                 'top': '',
                 'left': '',
                 'right': '',
@@ -827,17 +832,17 @@ function addChat(channel, channelId) {
             });
         }
     });
-    emoteMenuEl.draggable({
+    $emoteMenu.draggable({
         containment: chatArea,
     });
-    emoteMenuEl.resizable({
+    $emoteMenu.resizable({
         handles: 'n, ne, e',
         minHeight: 200,
         minWidth: 200,
     });
     chatArea.sortable({
         handle: '.chatHeader',
-        start: function(event, ui) {
+        start(event, ui) {
             ui.placeholder.width(ui.item.width());
             ui.placeholder.height(ui.item.height());
         },
@@ -854,27 +859,29 @@ function addChat(channel, channelId) {
     /* let contentWidthOld =
         $('.chatContent[id$=\'' + channelLC + 'scrollArea\'] .chatMessageList')
             .width();*/
-    $('.chat[id$=\'' + channelLC).resize(function(event) {
-        let newMessagesInfoEl =
+    $('.chat[id$=\'' + channelLC).resize(function() {
+        let $newMessagesInfo =
             $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']');
-        let chatContentEl = $('#' + channelLC + ' .chatContent');
-        if (newMessagesInfoEl.is(':hidden')
+        let $chatContent = $('#' + channelLC + ' .chatContent');
+        let $chatContentArea =
+            $('.chatContent[id$=\'' + channelLC + 'contentArea\']');
+        if ($newMessagesInfo.is(':hidden')
             && contentHeightOld
-            <= $('.chatContent[id$=\'' + channelLC + 'contentArea\']')
+            <= $chatContentArea
                 .height()) {
-            chatContentEl
-                .scrollTop(chatContentEl[0]
+            $chatContent
+                .scrollTop($chatContent[0]
                     .scrollHeight + 50);
             // $("#" + channelLC + " .chatContent").stop(true, true)
             // .animate({ scrollTop: $("#" + channelLC + " .chatContent")[0]
             // .scrollHeight }, 1000);
             contentHeightOld =
-                $('.chatContent[id$=\'' + channelLC +'contentArea\']').height();
+                $chatContentArea.height();
         }
-        if (newMessagesInfoEl.is(':hidden')) {
+        if ($newMessagesInfo.is(':hidden')) {
             // alert("test2");
-            chatContentEl
-                .scrollTop(chatContentEl[0]
+            $chatContent
+                .scrollTop($chatContent[0]
                     .scrollHeight + 50);
             /* contentWidthOld =
                 $('.chatContent[id$=\''
@@ -956,7 +963,7 @@ function addFavToList(channelParam) {
             url: ('https://api.betterttv.net/2/channels/' + channelLC),
             async: true,
             dataType: 'json',
-            error: function(xhr, ajaxOptions, thrownError) {
+            error: function(xhr) {
                 if (xhr.status === 404) {
                     // Ignore - No BTTV emotes in this channel
                     console.log('No BTTV Emotes in Channel: ' + channel);
@@ -970,7 +977,7 @@ function addFavToList(channelParam) {
             url: ('https://api.frankerfacez.com/v1/room/' + channelLC),
             async: true,
             dataType: 'json',
-            error: function(xhr, ajaxOptions, thrownError) {
+            error: function(xhr) {
                 if (xhr.status === 404) {
                     // Ignore - No FFZ emotes in this channel
                     console.log('No FFZ Emotes in Channel: ' + channel);
@@ -991,7 +998,7 @@ function addFavToList(channelParam) {
                 + '"><img class="profilePic" src="' + ((profilePicURL != null)
                     ? profilePicURL : '/img/defaultProfile.png')
                 + '" /><input class="favEntryAddChatButton" ' +
-                'id="' + channelLC + '"type="button" value="' + channel
+                'id="' + channelLC + '" type="button" value="' + channel
                 + '"><input class="favEntryRemoveButton" ' +
                 'id="' + channelLC + '" type="button" ></div>');
             $(document).on('click', '.favEntryAddChatButton[id$=\''

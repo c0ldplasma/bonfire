@@ -6,11 +6,15 @@
       <w>emojis</w>
       <w>globaluserstate</w>
       <w>hosttarget</w>
+      <w>imagesloaded</w>
+      <w>jqueryui</w>
+      <w>jqueryuisortable</w>
       <w>jsonp</w>
       <w>namelist</w>
       <w>onerror</w>
       <w>onmessage</w>
       <w>onopen</w>
+      <w>pkgd</w>
       <w>privmsg</w>
       <w>resub</w>
       <w>roomstate</w>
