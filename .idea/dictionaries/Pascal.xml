@@ -19,6 +19,7 @@
       <w>privmsg</w>
       <w>resub</w>
       <w>roomstate</w>
+      <w>sctrict</w>
       <w>tlnecfrtl</w>
       <w>twitchtv</w>
       <w>usernotice</w>

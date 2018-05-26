@@ -102,7 +102,7 @@ function hsl2rgb(h, s, l) {
     return [r * 255, g * 255, b * 255];
 }
 
-function colorCorrection(color) {
+export function colorCorrection(color) {
     // Color contrast correction
     color = hex2rgb(color);
     color = rgb2yiq(color.r, color.g, color.b);
@@ -118,7 +118,7 @@ function colorCorrection(color) {
     return color.substring(0, 7);
 }
 
-function randomColor() {
+export function randomColor() {
     let color;
     let col = Math.floor(Math.random() * 15);
     switch (col) {

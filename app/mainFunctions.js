@@ -13,6 +13,9 @@
  * @param chatters.staff
  */
 
+'use strict';
+import {colorCorrection, randomColor} from './colors.js';
+
 /**
  * Searches for URLs in the given String and replaces them with the
  * proper <a href=""> HTML Tag
@@ -108,7 +111,7 @@ function getMetaInfo(metaMsg, username) {
  *
  * @param {string} msg Single whole raw chat message sent by Twitch
  */
-function addMessage(msg) {
+export function addMessage(msg) {
     if (msg.length <= 1) {
         return;
     }
@@ -273,7 +276,7 @@ function addMessage(msg) {
         userMessage = userMessage.substring(1, userMessage.length);
 
         let action = false;
-        if (userMessage.startsWith('\001ACTION')) {
+        if (userMessage.startsWith('\x01ACTION')) {
             action = true;
             userMessage = userMessage.substring(8, userMessage.length - 2);
         }
@@ -650,147 +653,155 @@ function addChat(channel, channelId) {
     }
     $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu img')
         .click(function() {
-        let emoteName = $(this).attr('alt');
-        let inputField = $('.chatInputField[id$=\'' + channelLC + '\']');
-        let curValue = inputField.val();
-        let newValue;
-        if (!curValue.endsWith(' ') && curValue.length > 0) {
-            newValue = curValue + ' ' + emoteName + ' ';
-        } else {
-            newValue = curValue + emoteName + ' ';
-        }
-        inputField.val(newValue);
-    });
+            let emoteName = $(this).attr('alt');
+            let inputField = $('.chatInputField[id$=\'' + channelLC + '\']');
+            let curValue = inputField.val();
+            let newValue;
+            if (!curValue.endsWith(' ') && curValue.length > 0) {
+                newValue = curValue + ' ' + emoteName + ' ';
+            } else {
+                newValue = curValue + emoteName + ' ';
+            }
+            inputField.val(newValue);
+        });
 
     $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .emotes h3')
         .click(function() {
-        if ($(this).parent().css('height') === '18px') {
-            $(this).parent().css({'height': ''});
-        } else {
-            $(this).parent().css({'height': '18px'});
-        }
-    });
+            if ($(this).parent().css('height') === '18px') {
+                $(this).parent().css({'height': ''});
+            } else {
+                $(this).parent().css({'height': '18px'});
+            }
+        });
     $(document).on('click', '.toggleStream[id$=\'' + channelLC + '\']',
         function() {
-        if ($(this).parent().parent().find('.chatStream').length) {
-            $(this).parent().parent().find('.chatStream').remove();
-            $(this).parent().parent().find('.chatContent')
-                .css({'height': 'calc(100% - 105px)'});
-            $(this).parent().parent().find('.chatViewerlist')
-                .css({'height': 'calc(100% - 35px)'});
-        } else {
-            $(this).parent().parent().prepend(
-                '<div class="chatStream" id="' + channelLC + '">' +
-                '<div class="chatStreamInner">' +
-                '<iframe src="https://player.twitch.tv/?channel=' + channelLC
-                + '" frameborder="0" allowfullscreen="true"' +
-                ' scrolling="no" height="100%" width="100%"></iframe>' +
-                '</div></div>');
-            $(this).parent().parent().find('.chatContent')
-                .css({'height': 'calc(100% - 105px - ' +
-                    $(this).parent().parent()
-                        .find('.chatStream').outerHeight() + 'px )'});
-            $(this).parent().parent().find('.chatViewerlist')
-                .css({'height': 'calc(100% - 35px - ' +
-                    $(this).parent().parent()
-                        .find('.chatStream').outerHeight() + 'px )'});
-        }
-    });
+            if ($(this).parent().parent().find('.chatStream').length) {
+                $(this).parent().parent().find('.chatStream').remove();
+                $(this).parent().parent().find('.chatContent')
+                    .css({'height': 'calc(100% - 105px)'});
+                $(this).parent().parent().find('.chatViewerlist')
+                    .css({'height': 'calc(100% - 35px)'});
+            } else {
+                $(this).parent().parent().prepend(
+                    '<div class="chatStream" id="' + channelLC + '">' +
+                    '<div class="chatStreamInner">' +
+                    '<iframe src="https://player.twitch.tv/?channel=' + channelLC
+                    + '" frameborder="0" allowfullscreen="true"' +
+                    ' scrolling="no" height="100%" width="100%"></iframe>' +
+                    '</div></div>');
+                $(this).parent().parent().find('.chatContent')
+                    .css({
+                        'height': 'calc(100% - 105px - ' +
+                        $(this).parent().parent()
+                            .find('.chatStream').outerHeight() + 'px )'
+                    });
+                $(this).parent().parent().find('.chatViewerlist')
+                    .css({
+                        'height': 'calc(100% - 35px - ' +
+                        $(this).parent().parent()
+                            .find('.chatStream').outerHeight() + 'px )'
+                    });
+            }
+        });
     $(document).on('resize', '.chat[id$=\'' + channelLC + '\']', function() {
         $(this).find('.chatContent')
-            .css({'height': 'calc(100% - 105px - ' + $(this)
-                    .find('.chatStream').outerHeight() + 'px )'});
+            .css({
+                'height': 'calc(100% - 105px - ' + $(this)
+                    .find('.chatStream').outerHeight() + 'px )'
+            });
         $(this).find('.chatViewerlist')
-            .css({'height': 'calc(100% - 35px - ' + $(this)
-                    .find('.chatStream').outerHeight() + 'px )'});
+            .css({
+                'height': 'calc(100% - 35px - ' + $(this)
+                    .find('.chatStream').outerHeight() + 'px )'
+            });
     });
     $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
         function() {
-        $(document).off('click', '.toggleStream[id$=\'' + channelLC + '\']');
-        $(this).parent().parent().remove();
-        connection.send('PART #' + channelLC);
-        connectionSend.send('PART #' + channelLC);
-    });
+            $(document).off('click', '.toggleStream[id$=\'' + channelLC + '\']');
+            $(this).parent().parent().remove();
+            connection.send('PART #' + channelLC);
+            connectionSend.send('PART #' + channelLC);
+        });
     let toggleVL = 0;
     $(document).on('click', '.toggleViewerlist[id$=\'' + channelLC + '\']',
         function() {
-        // if ($(this).parent().parent().find("div.chatViewerlist")
+            // if ($(this).parent().parent().find("div.chatViewerlist")
             // .css("display").toLowerCase() != "none") {
-        if (toggleVL % 2 !== 0) {
-            $(this).parent().parent().find('div.chatViewerlist').hide();
-            $(this).parent().parent().find('div.chatContent').show();
-            $(this).parent().parent().find('div.chatInput').show();
-        } else {
-            $(this).parent().parent().find('div.chatContent').hide();
-            $(this).parent().parent().find('div.chatInput').hide();
-            $(this).parent().parent().find('div.chatViewerlist').show();
+            if (toggleVL % 2 !== 0) {
+                $(this).parent().parent().find('div.chatViewerlist').hide();
+                $(this).parent().parent().find('div.chatContent').show();
+                $(this).parent().parent().find('div.chatInput').show();
+            } else {
+                $(this).parent().parent().find('div.chatContent').hide();
+                $(this).parent().parent().find('div.chatInput').hide();
+                $(this).parent().parent().find('div.chatViewerlist').show();
 
-            let viewerlist =
-                $(this).parent().parent().find('div.chatViewerlist');
+                let viewerlist =
+                    $(this).parent().parent().find('div.chatViewerlist');
 
-            $.ajax({
-                url: ('https://tmi.twitch.tv/group/user/' + channelLC
-                    + '/chatters'),
-                headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
-                dataType: 'jsonp',
-                async: true,
-            }).done(function(data) {
-                viewerlist.empty();
-                data = data.data;
-                viewerlist.append('Chatter Count: ' + data.chatter_count +
-                    '<br /><br />');
+                $.ajax({
+                    url: ('https://tmi.twitch.tv/group/user/' + channelLC
+                        + '/chatters'),
+                    headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
+                    dataType: 'jsonp',
+                    async: true,
+                }).done(function(data) {
+                    viewerlist.empty();
+                    data = data.data;
+                    viewerlist.append('Chatter Count: ' + data.chatter_count +
+                        '<br /><br />');
 
-                let chatters = data.chatters;
-                if (chatters.moderators.length > 0) {
-                    viewerlist.append('<h3>Moderators</h3>');
-                    let modList = '<ul>';
-                    for (let i = 0; i < chatters.moderators.length; i++) {
-                        modList += '<li>' + chatters.moderators[i] + '</li>';
+                    let chatters = data.chatters;
+                    if (chatters.moderators.length > 0) {
+                        viewerlist.append('<h3>Moderators</h3>');
+                        let modList = '<ul>';
+                        for (let i = 0; i < chatters.moderators.length; i++) {
+                            modList += '<li>' + chatters.moderators[i] + '</li>';
+                        }
+                        modList += '</ul><br />';
+                        viewerlist.append(modList);
                     }
-                    modList += '</ul><br />';
-                    viewerlist.append(modList);
-                }
-                if (chatters.staff.length > 0) {
-                    viewerlist.append('<h3>Staff</h3>');
-                    let staffList = '<ul>';
-                    for (let i = 0; i < chatters.staff.length; i++) {
-                        staffList += '<li>' + chatters.staff[i] + '</li>';
+                    if (chatters.staff.length > 0) {
+                        viewerlist.append('<h3>Staff</h3>');
+                        let staffList = '<ul>';
+                        for (let i = 0; i < chatters.staff.length; i++) {
+                            staffList += '<li>' + chatters.staff[i] + '</li>';
+                        }
+                        staffList += '</ul><br />';
+                        viewerlist.append(staffList);
                     }
-                    staffList += '</ul><br />';
-                    viewerlist.append(staffList);
-                }
-                if (chatters.admins.length > 0) {
-                    viewerlist.append('<h3>Admins</h3>');
-                    let adminsList = '<ul>';
-                    for (let i = 0; i < chatters.admins.length; i++) {
-                        adminsList += '<li>' + chatters.admins[i] + '</li>';
+                    if (chatters.admins.length > 0) {
+                        viewerlist.append('<h3>Admins</h3>');
+                        let adminsList = '<ul>';
+                        for (let i = 0; i < chatters.admins.length; i++) {
+                            adminsList += '<li>' + chatters.admins[i] + '</li>';
+                        }
+                        adminsList += '</ul><br />';
+                        viewerlist.append(adminsList);
                     }
-                    adminsList += '</ul><br />';
-                    viewerlist.append(adminsList);
-                }
-                if (chatters.global_mods.length > 0) {
-                    viewerlist.append('<h3>Global Mods</h3>');
-                    let globalModsList = '<ul>';
-                    for (let i = 0; i < chatters.global_mods.length; i++) {
-                        globalModsList +=
-                            '<li>' + chatters.global_mods[i] + '</li>';
+                    if (chatters.global_mods.length > 0) {
+                        viewerlist.append('<h3>Global Mods</h3>');
+                        let globalModsList = '<ul>';
+                        for (let i = 0; i < chatters.global_mods.length; i++) {
+                            globalModsList +=
+                                '<li>' + chatters.global_mods[i] + '</li>';
+                        }
+                        globalModsList += '</ul><br />';
+                        viewerlist.append(globalModsList);
                     }
-                    globalModsList += '</ul><br />';
-                    viewerlist.append(globalModsList);
-                }
-                if (chatters.viewers.length > 0) {
-                    viewerlist.append('<h3>Viewers</h3>');
-                    let viewersList = '<ul>';
-                    for (let i = 0; i < chatters.viewers.length; i++) {
-                        viewersList += '<li>' + chatters.viewers[i] + '</li>';
+                    if (chatters.viewers.length > 0) {
+                        viewerlist.append('<h3>Viewers</h3>');
+                        let viewersList = '<ul>';
+                        for (let i = 0; i < chatters.viewers.length; i++) {
+                            viewersList += '<li>' + chatters.viewers[i] + '</li>';
+                        }
+                        viewersList += '</ul><br />';
+                        viewerlist.append(viewersList);
                     }
-                    viewersList += '</ul><br />';
-                    viewerlist.append(viewersList);
-                }
-            });
-        }
-        toggleVL++;
-    });
+                });
+            }
+            toggleVL++;
+        });
 
     $('.chat[id$=\'' + channelLC + '\']').resizable({
         handles: 'e',
@@ -806,7 +817,8 @@ function addChat(channel, channelId) {
             event.preventDefault();
             if ($(this).val().startsWith('.')
                 || $(this).val().startsWith('/')) {
-                connection.send('PRIVMSG #' + channelLC + ' :' + $(this).val());
+                connectionSend.send('PRIVMSG #' + channelLC + ' :'
+                    + $(this).val());
             } else {
                 connectionSend.send('PRIVMSG #' + channelLC
                     + ' :' + $(this).val());
@@ -824,7 +836,7 @@ function addChat(channel, channelId) {
         let $chatContent = $('#' + channelLC + ' .chatContent');
         $chatContent.scrollTop($chatContent[0].scrollHeight);
     });
-    let $emoteMenu = $('.chatInput[id$=\'' + channelLC+'\'] .emoteMenu');
+    let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
     $('.chatInput[id$=\'' + channelLC + '\'] .kappa').click(function() {
         if ($emoteMenu.is(':hidden')) {
             $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu').show();
@@ -940,7 +952,7 @@ function addChat(channel, channelId) {
  *
  * @param {string} channelParam channel name or null
  */
-function addFavToList(channelParam) {
+export function addFavToList(channelParam) {
     /**
      *
      *
@@ -1092,7 +1104,7 @@ function addFavToList(channelParam) {
  * If the favorites list is enabled, disable it.
  * If its disabled, enable it.
  */
-function toggleFavList() {
+export function toggleFavList() {
     if (document.getElementById('fav-channel-list').style.display === 'none') {
         document.getElementById('fav-channel-list').style.display
             = 'inline-block';
