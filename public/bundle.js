@@ -192,6 +192,12 @@ function randomColor() {
  * @param chatters.staff
  */
 
+/**
+ * Searches for URLs in the given String and replaces them with the
+ * proper <a href=""> HTML Tag
+ * @param {string} txt - Text in which the links get searched
+ * @return {string} Text with <a href=""> HTML Tags
+ */
 function matchURL(txt) {
     let pattern =
         /((^|\s|&#32;)(http(s)?:\/\/.)?(www\.)?([-a-zA-Z0-9@:%_+~#=]|\.(?!\.)){2,256}\.[a-z]{2,8}\b([-a-zA-Z0-9@:%_+.~#?&/=]*))(?=(\s|$|&#32;))/g;
