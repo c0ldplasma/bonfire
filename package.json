@@ -1,5 +1,7 @@
 {
-  "name": "rollup-starter-app",
+  "name": "bonfire-chat-client",
+  "description": "A Twitch chat client web app",
+  "version": "0.3.0",
   "devDependencies": {
     "npm-run-all": "^4.1.2",
     "rollup": "^0.55.5",
@@ -10,6 +12,7 @@
   "dependencies": {
     "date-fns": "^1.28.5",
     "ev-emitter": "^1.1.1",
+    "semver": "^5.5.0",
     "serve": "^6.4.8"
   },
   "scripts": {
