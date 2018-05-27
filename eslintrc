@@ -1,5 +1,6 @@
 {
 "env": {
+    "jquery": true,
     "browser": true,
     "es6": true
 },
@@ -12,12 +13,13 @@
 },
 "rules": {
     "max-len": [2, {
-        code: 80,
+        code: 100,
         tabWidth: 2,
         ignoreUrls: true,
         ignorePattern: '^goog\.(module|require)',
         ignoreRegExpLiterals: true,
-    }]
+    }],
+    "no-invalid-this": 0
 },
 "extends": "eslint-config-google"
 }

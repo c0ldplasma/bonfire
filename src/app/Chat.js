@@ -8,8 +8,8 @@ class Chat {
      * @param {string} channelName Name of the channel
      */
     constructor(channelName) {
-        this.name = name;
-        this._age = 0;
+        /** @private */
+        this.channelName_ = channelName;
     }
 
     get age() {
@@ -28,5 +28,4 @@ class Chat {
         console.log('I\'m a ' + this.name);
     }
 }
-
 export default Chat;
