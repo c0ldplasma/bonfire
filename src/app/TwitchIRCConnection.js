@@ -25,10 +25,21 @@ class TwitchIRCConnection {
         this.connection_.send('PASS oauth:' + localStorage.accessToken);
         this.connection_.send('NICK ' + user);
     }
+
+    /**
+     * Calles on error
+     * @private
+     */
     onError_() {
         console.log('WebSocket Error ' + error);
         alert('ERROR: ' + error);
     }
-    onMessage_(message) {};
+
+    /**
+     * Calles on message
+     * @param {object} event event triggered by the Websocket connection
+     * @private
+     */
+    onMessage_(event) {};
 }
 export default TwitchIRCConnection;

@@ -13,6 +13,7 @@ import BadgeManager from './BadgeManager.js';
 import EmoteManager from './EmoteManager.js';
 import NameColorManager from './NameColorManager.js';
 import FavoritesList from './FavoritesList.js';
+import ChatsManager from './ChatsManager.js';
 
 /**
  * Represents the whole application
@@ -38,6 +39,7 @@ class App {
      */
     main_() {
         new FavoritesList();
+        new ChatsManager();
 
         new NameColorManager();
         new BadgeManager();

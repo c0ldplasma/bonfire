@@ -3,12 +3,15 @@ import Chat from './app/Chat.js';
 /**
  * Represents the whole application
  */
-class ChatList {
+class ChatsManager {
     /**
-     * Creates the ChatList
+     * Creates the ChatsManager
      */
     constructor() {
-        /** @private */
+        /**
+         * @private
+         * @type {Object.<string, Chat>}
+         */
         this.chatList_ = {};
     }
 
@@ -17,7 +20,7 @@ class ChatList {
      * @return {boolean} true if chat already in the chatList
      */
     chatAlreadyAdded(channelName) {
-        return this.chatList_.hasOwnProperty(channelName) ? true : false;
+        return this.chatList_.hasOwnProperty(channelName);
     }
 
     /**
@@ -28,13 +31,12 @@ class ChatList {
     removeChat(channelName) {
         delete this.chatList_[channelName];
 
-        //ToDo: Remove from DOM
+        // ToDo: Remove from DOM
     }
 
     /**
      * Creates new Chat and adds it to the chatList_ if there is not already
      * a chat with this channelName
-     *
      * @param {string} channelName Name of the channel that will be added
      */
     addChat(channelName) {
@@ -452,4 +454,4 @@ class ChatList {
        });*/
     }
 }
-export default ChatList;
+export default ChatsManager;

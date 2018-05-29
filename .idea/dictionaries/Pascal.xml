@@ -3,6 +3,7 @@
     <words>
       <w>bsohg</w>
       <w>bttv</w>
+      <w>chrominance</w>
       <w>clearchat</w>
       <w>emojis</w>
       <w>globaluserstate</w>
@@ -28,6 +29,7 @@
       <w>usernotice</w>
       <w>userstate</w>
       <w>viewerlist</w>
+      <w>websocket</w>
       <w>xllef</w>
     </words>
   </dictionary>
