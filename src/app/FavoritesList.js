@@ -1,6 +1,11 @@
 'use strict';
 
-import TwitchConstants from './TwitchConstants.js';
+/**
+ * @param data._total
+ * @param data.getUsers._id
+ */
+
+import TwitchApi from './TwitchApi.js';
 
 /**
  * List of favorite Twitch channels
@@ -9,15 +14,14 @@ class FavoritesList {
     /**
      * @param {BadgeManager} badgeManager
      * @param {EmoteManager} emoteManager
-     * @param {ChatsManager} chatsManager
+     * @param {ChatManager} chatManager
      * @constructor
      */
-    constructor(badgeManager, emoteManager, chatsManager) {
-        this.favList_ = [];
+    constructor(badgeManager, emoteManager, chatManager) {
         this.isVisible_ = true;
         this.badgeManager_ = badgeManager;
         this.emoteManager_ = emoteManager;
-        this.chatsManager_ = chatsManager;
+        this.chatManager_ = chatManager;
     }
 
     /**
@@ -25,7 +29,7 @@ class FavoritesList {
      * If its disabled, enable it.
      */
     toggleFavList() {
-        this.isVisible_ ? false : true;
+        this.isVisible_ = !this.isVisible_;
         if (!this.isVisible_) {
             document.getElementById('fav-channel-list').style.display
                 = 'inline-block';
@@ -50,35 +54,43 @@ class FavoritesList {
         if ($.type(channelLC) === 'string') {
             channels = channelLC;
         }
+        channels = channels.replace(/\s+/g, '');
+        let channelsCount = channels.split(',').length;
 
         if (channels.length >= 3) {
-            $.ajax({
-                url: ('https://api.twitch.tv/kraken/users?login='
-                    + channels),
-                headers: {
-                    'Accept': 'application/vnd.twitchtv.v5+json',
-                    'Client-ID': TwitchConstants.CLIENT_ID,
-                },
-                async: true,
-            }).done(function(data) {
-                if (data.users.length >= 1) {
-                    let channel = data.users[0].display_name;
-                    let channelId = data.users[0]._id;
-                    let profilePicURL = data.users[0].logo;
+            TwitchApi.getUsers(channels, this, function(data) {
+                let notExistingChannelsCount = channelsCount - data._total;
+                for (let i = 0; i < data._total; i++) {
+                    let channel = data.getUsers[i].display_name;
+                    let channelId = data.getUsers[i]._id;
+                    let profilePicURL = data.getUsers[i].logo;
+                    // ToDo: Check if next line is necessary
                     document.getElementById('newFavInput').placeholder = '';
-                    addFavLine(channel, profilePicURL, channelId);
-                } else {
-                    document.getElementById('newFavInput').value = '';
-                    $('#newFavInput').queue(function(next) {
-                        $(this).attr('placeholder', 'Channel does not exist.');
-                        next();
-                    }).delay(5000).queue(function(next) {
-                        $(this).attr('placeholder', '');
-                        next();
-                    });
+                    this.addFavLine(channel, profilePicURL, channelId);
+                }
+
+                if (notExistingChannelsCount > 0) {
+                    this.showChannelDoesNotExistInfo_(notExistingChannelsCount);
                 }
             });
         }
+    }
+
+    /**
+     * @param {number} notExistingChannelsCount
+     * @private
+     */
+    showChannelDoesNotExistInfo_(notExistingChannelsCount) {
+        document.getElementById('newFavInput').value = '';
+        $('#newFavInput').queue(function(next) {
+            let info = (notExistingChannelsCount > 1) ? ' Channels do not exist.' :
+                ' Channel does not exist.';
+            $(this).attr('placeholder', notExistingChannelsCount + info);
+            next();
+        }).delay(5000).queue(function(next) {
+            $(this).attr('placeholder', '');
+            next();
+        });
     }
 
     /**
@@ -97,9 +109,9 @@ class FavoritesList {
             && $('.favEntry[id$=\'' + channelLC + '\']').length === 0) {
             document.getElementById('newFavInput').value = '';
 
-            let channelList = $('#fav-channel-list');
+            let favList = $('#fav-channel-list');
 
-            channelList.append('<div class="favEntry" id="' + channelLC
+            favList.append('<div class="favEntry" id="' + channelLC
                 + '"><img class="profilePic" src="' + ((profilePicURL != null)
                     ? profilePicURL : '/img/defaultProfile.png')
                 + '" /><input class="favEntryAddChatButton" ' +
@@ -107,19 +119,19 @@ class FavoritesList {
                 + '"><input class="favEntryRemoveButton" ' +
                 'id="' + channelLC + '" type="button" ></div>');
 
-            $(document).on('click', '.favEntryAddChatButton[id$=\''
-                + channelLC + '\']', function() {
-                this.chatsManager_.addChat(channel, channelId);
+            $(document).on('click', this, '.favEntryAddChatButton[id$=\''
+                + channelLC + '\']', function(event) {
+                event.data.chatManager_.addChat(channel, channelId);
             });
 
-            $(document).on('click', '.favEntryRemoveButton[id$=\''
-                + channelLC + '\']', function() {
+            $(document).on('click', this, '.favEntryRemoveButton[id$=\''
+                + channelLC + '\']', function(event) {
                     $(this).parent().remove();
-                    this.removeChannelFromLocalStorage_(channelId);
+                    event.data.removeChannelFromLocalStorage_(channelId);
             });
 
             // ToDo: is it needed to do channelList.sortable() every time when an entry is added?
-            channelList.sortable({
+            favList.sortable({
                 axis: 'y',
                 animation: 300,
                 cursor: 'move',

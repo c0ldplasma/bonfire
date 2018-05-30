@@ -27,7 +27,7 @@ class EmoteManager {
         // Gets a list of the emojis and emoticons that the specified
         // user can use in chat.
         $.ajax({
-            url: ('https://api.twitch.tv/kraken/users/' + userID + '/emotes'),
+            url: ('https://api.twitch.tv/kraken/getUsers/' + userID + '/emotes'),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
                 'Client-ID': this.clientId_,

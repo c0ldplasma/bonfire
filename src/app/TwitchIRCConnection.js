@@ -6,9 +6,13 @@ import TwitchConstants from './TwitchConstants.js';
  */
 class TwitchIRCConnection {
     /**
-     * @param {function} onMessage
+     * @param {AppUser} appUser
+     * @constructor
      */
-    constructor() {
+    constructor(appUser) {
+        /** @private */
+        this.appUser_ = appUser;
+
         if (new.target === TwitchIRCConnection) {
             throw new TypeError('Cannot construct abstract instances ' +
                 'of TwitchIRCConnection directly');
@@ -23,7 +27,7 @@ class TwitchIRCConnection {
         this.connection_.send('CAP REQ :twitch.tv/tags');
         this.connection_.send('CAP REQ :twitch.tv/commands');
         this.connection_.send('PASS oauth:' + localStorage.accessToken);
-        this.connection_.send('NICK ' + user);
+        this.connection_.send('NICK ' + this.appUser_.getUserName());
     }
 
     /**

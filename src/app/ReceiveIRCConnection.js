@@ -1,16 +1,18 @@
 'use strict';
 import TwitchIRCConnection from './TwitchIRCConnection.js';
-import {addMessage} from './mainFunctions.js';
 /**
  * Websocket connection to Twitch for receiving
  */
 class ReceiveIRCConnection extends TwitchIRCConnection {
     /**
-     * @param {function} onMessage
+     * @param {AppUser} appUser
+     * @param {MessageParser} messageParser
+     * @constructor
      */
-    constructor() {
-        super();
+    constructor(appUser, messageParser) {
+        super(appUser);
         this.connection_.onmessage = this.onMessage_;
+        this.messageParser_ = messageParser;
     }
 
     /**
@@ -23,7 +25,13 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
         for (let i = 0; i < messages.length; i++) {
             let msg = messages[i];
             console.log(msg);
-            addMessage(msg);
+            if (msg.startsWith('PING :tmi.twitch.tv')) {
+                this.connection_.send('PONG :tmi.twitch.tv');
+            } else if (msg.length > 1) {
+                this.messageParser_.parseMessage(msg);
+            } else {
+                console.log('Received empty message in ReceiveIRVConnection onMessage_()');
+            }
         }
     }
 }

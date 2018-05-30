@@ -13,7 +13,7 @@ import BadgeManager from './BadgeManager.js';
 import EmoteManager from './EmoteManager.js';
 import NameColorManager from './NameColorManager.js';
 import FavoritesList from './FavoritesList.js';
-import ChatsManager from './ChatsManager.js';
+import ChatManager from './ChatManager.js';
 
 /**
  * Represents the whole application
@@ -28,8 +28,20 @@ class App {
         this.appUser_ = new AppUser();
         /** @private */
         this.chatList_ = [];
-        /** private */
+        /** @private */
+        this.chatManager_ = new ChatManager();
+        /** @private */
+        this.nameColorManager_ = new NameColorManager();
+        /** @private */
+        this.badgeManager_ = new BadgeManager();
+        /** @private */
+        this.emoteManager_ = new EmoteManager();
+        /** @private */
+        this.favoritesList_ =
+            new FavoritesList(this.badgeManager_, this.emoteManager_, this.chatManager_);
 
+        new SendIRCConnection(this.appUser_);
+        new ReceiveIRCConnection(this.appUser_);
         this.main_();
     }
 
@@ -38,16 +50,6 @@ class App {
      * @private
      */
     main_() {
-        new FavoritesList();
-        new ChatsManager();
-
-        new NameColorManager();
-        new BadgeManager();
-        new EmoteManager();
-
-        new SendIRCConnection();
-        new ReceiveIRCConnection();
-
         document.title += ` ${version}`;
         try {
             let channels = JSON.parse(localStorage.getItem('channels'));

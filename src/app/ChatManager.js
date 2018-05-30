@@ -3,9 +3,9 @@ import Chat from './app/Chat.js';
 /**
  * Represents the whole application
  */
-class ChatsManager {
+class ChatManager {
     /**
-     * Creates the ChatsManager
+     * Creates the ChatManager
      */
     constructor() {
         /**
@@ -323,7 +323,7 @@ class ChatsManager {
                 event.preventDefault();
                 if ($(this).val().startsWith('.')
                     || $(this).val().startsWith('/')) {
-                    connectionSend.send('PRIVMSG #' + channelLC + ' :'
+                    connection.send('PRIVMSG #' + channelLC + ' :'
                         + $(this).val());
                 } else {
                     connectionSend.send('PRIVMSG #' + channelLC
@@ -454,4 +454,4 @@ class ChatsManager {
        });*/
     }
 }
-export default ChatsManager;
+export default ChatManager;

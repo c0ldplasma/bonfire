@@ -245,8 +245,8 @@ function randomColor() {
 
 /**
  * @param data
- * @param data.users
- * @param data.users.display_name
+ * @param data.getUsers
+ * @param data.getUsers.display_name
  * @param data.logo
  * @param ffzGlobal.default_sets
  * @param data.chatter_count
@@ -341,7 +341,7 @@ function getMetaInfo(metaMsg, username) {
     return metaInfo;
 }
 
-/* exported addMessage */
+/* exported parseMessage */
 /**
  * Parses an IRC message from Twitch and appends it to the corresponding chat.
  *
@@ -872,7 +872,7 @@ function addFavToList(channelParam) {
         && channelParam == null) {
     } else if ($.type(channelParam) === 'string') {
         $.ajax({
-            url: ('https://api.twitch.tv/kraken/users/' + channelParam),
+            url: ('https://api.twitch.tv/kraken/getUsers/' + channelParam),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
                 'Client-ID': clientID,
@@ -886,7 +886,7 @@ function addFavToList(channelParam) {
         });
     } else {
         $.ajax({
-            url: ('https://api.twitch.tv/kraken/users?login='
+            url: ('https://api.twitch.tv/kraken/getUsers?login='
                 + document.getElementById('newFavInput').value),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
@@ -894,10 +894,10 @@ function addFavToList(channelParam) {
             },
             async: true,
         }).done(function(data) {
-            if (data.users.length >= 1) {
-                let channel = data.users[0].display_name;
-                let channelId = data.users[0]._id;
-                let profilePicURL = data.users[0].logo;
+            if (data.getUsers.length >= 1) {
+                let channel = data.getUsers[0].display_name;
+                let channelId = data.getUsers[0]._id;
+                let profilePicURL = data.getUsers[0].logo;
                 document.getElementById('newFavInput').placeholder = '';
                 addFavLine(channel, profilePicURL, channelId);
             } else {
@@ -1006,7 +1006,7 @@ class App {
 // Gets a list of the emojis and emoticons that the specified
 // user can use in chat.
         $.ajax({
-            url: ('https://api.twitch.tv/kraken/users/' + userID + '/emotes'),
+            url: ('https://api.twitch.tv/kraken/getUsers/' + userID + '/emotes'),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
                 'Client-ID': this.clientId_,

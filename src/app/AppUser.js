@@ -4,6 +4,7 @@
  */
 'use strict';
 import TwitchConstants from './TwitchConstants.js';
+import TwitchApi from './TwitchApi.js';
 /**
  * Represents the User of the chat client
  */
@@ -14,30 +15,33 @@ class AppUser {
      */
     constructor() {
         /** @private */
-        this.userName_ = null;
+        this.userName_ = '';
         /** @private */
-        this.userId_ = null;
+        this.userNameLC_ = '';
+        /** @private */
+        this.userId_ = '';
 
         this.requestAppUserData();
+    }
+
+    /**
+     * Getter
+     * @return {string} this.userName_
+     */
+    getUserName() {
+        return this.userName_;
     }
 
     /**
      * Sends an ajax request to twitch to receive userName_ and userId_ of the AppUser
      */
     requestAppUserData() {
-        $.ajax({
-            url: ('https://api.twitch.tv/kraken'),
-            headers: {
-                'Accept': 'application/vnd.twitchtv.v5+json',
-                'Client-ID': TwitchConstants.CLIENT_ID,
-                'Authorization': ('OAuth ' + localStorage.accessToken),
-            },
-            async: false,
-        }).done(function(data) {
+        TwitchApi.getUserFromOAuth(this, function(data) {
             if (data.token.valid === false) {
                 window.location.replace(TwitchConstants.AUTHORIZE_URL);
             } else if (typeof(data.token) !== 'undefined') {
                 this.userName_ = data.token.user_name;
+                this.userNameLC_ = this.userName_.toLowerCase();
                 this.userId_ = data.token.user_id;
             } else {
                 alert('Error while getting username');

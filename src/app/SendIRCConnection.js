@@ -5,10 +5,11 @@ import TwitchIRCConnection from './TwitchIRCConnection.js';
  */
 class SendIRCConnection extends TwitchIRCConnection {
     /**
+     * @param {AppUser} appUser
      * @constructor
      */
-    constructor() {
-        super();
+    constructor(appUser) {
+        super(appUser);
         this.connection_.onmessage = this.onMessage_;
     }
 
