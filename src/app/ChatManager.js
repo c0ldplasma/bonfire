@@ -50,7 +50,7 @@ class ChatManager {
      * a chat with this channelName
      * @param {string} channelName Name of the channel that will be added
      */
-    addChat(channelName) {
+    addChat(channelName) { // ToDo: Restructure this method
         let channelLC = channelName.toLowerCase();
 
         connection.send('JOIN #' + channelLC);
