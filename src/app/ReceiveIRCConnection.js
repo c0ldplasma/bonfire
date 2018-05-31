@@ -7,12 +7,14 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
     /**
      * @param {AppUser} appUser
      * @param {MessageParser} messageParser
+     * @param {ChatManager} chatManager
      * @constructor
      */
-    constructor(appUser, messageParser) {
+    constructor(appUser, messageParser, chatManager) {
         super(appUser);
         this.connection_.onmessage = this.onMessage_;
         this.messageParser_ = messageParser;
+        this.chatManager_ = chatManager;
     }
 
     /**
@@ -28,7 +30,8 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
             if (msg.startsWith('PING :tmi.twitch.tv')) {
                 this.connection_.send('PONG :tmi.twitch.tv');
             } else if (msg.length > 1) {
-                this.messageParser_.parseMessage(msg);
+                let chatMessages = this.messageParser_.parseMessage(msg);
+                this.chatManager_ = this.chatManager_.addMessages(chatMessages);
             } else {
                 console.log('Received empty message in ReceiveIRVConnection onMessage_()');
             }

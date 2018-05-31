@@ -12,7 +12,25 @@ class Chat {
         this.channelName_ = channelName;
     }
 
-    limitMessagesInChat() {
+    /**
+     * @param {Object.<ChatMessage>} message
+     */
+    addMessage(message) {
+        if (newMessage != null) {
+            if (chatMessageList.children('div').length === 0 ||
+                (chatMessageList.children('div').length !== 0 &&
+                    chatMessageList.children('div:last')
+                        .children('li').length >= 100)) {
+                chatMessageList.append('<div></div>');
+            }
+            chatMessageList.children('div:last').append(newMessage);
+            if (resubMessage != null) {
+                addMessage(resubMessage);
+            }
+        }
+    }
+
+    limitMessages() {
         // Limit messages in Chat
         let count = chatMessageList.find('li').length;
         // document.getElementById("newFavInput").value = " " + count;

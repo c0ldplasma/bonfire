@@ -16,10 +16,21 @@ class ChatManager {
     }
 
     /**
+     * Adds the chat messages to the correct chat
+     * @param {Array.<ChatMessage>} chatMessages
+     */
+    addMessages(chatMessages) {
+        for (let i = 0; i < chatMessages.length; i++) {
+            let chatName = chatMessages[i].getChatName();
+            this.chatList_[chatName].addMessage(chatMessages[i]);
+        }
+    }
+
+    /**
      * @param {string} channelName
      * @return {boolean} true if chat already in the chatList
      */
-    chatAlreadyAdded(channelName) {
+    isChatAlreadyAdded(channelName) {
         return this.chatList_.hasOwnProperty(channelName);
     }
 

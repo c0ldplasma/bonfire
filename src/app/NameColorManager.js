@@ -11,6 +11,14 @@ class NameColorManager {
         this.userColors_ = {};
     }
 
+    getUserColors() {
+        return this.userColors_;
+    }
+
+    addUserColor(username, color) {
+        this.userColors_[username] = color;
+    }
+
     /**
      * Returns a random color of the Twitch standard name colors
      * @return {string} Random color as hex #xxxxxx
