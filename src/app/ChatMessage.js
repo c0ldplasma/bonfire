@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * Represents one chat message
  */
@@ -58,4 +59,5 @@ class ChatMessage {
             + '</li>';
     }
 }
+
 export default ChatMessage;

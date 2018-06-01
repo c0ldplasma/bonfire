@@ -43,5 +43,44 @@ class TwitchApi {
             async: false,
         }).done(callback);
     }
+
+    /**
+     * Gets the names of all chatters in the specified chat
+     * @param {string} chatName name of the chat
+     * @param {object} context sets the Object 'this' is referring to in the callback function
+     * @param {function} callback function(data) that gets called after the request finished
+     */
+    static getChatterList(chatName, context, callback) {
+        $.ajax({
+            context: context,
+            url: ('https://tmi.twitch.tv/group/user/' + chatName
+                + '/chatters'),
+            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
+            dataType: 'jsonp',
+            async: true,
+        }).done(callback);
+    }
+
+    /**
+     * Gets recent messages from the specified chat
+     * @param {string} chatId
+     */
+    static getRecentMessages(chatId) {
+        // Download recent messages
+        $.ajax({
+            url: ('https://tmi.twitch.tv/api/rooms/' + chatId
+                + '/recent_messages?count=50'),
+            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
+            dataType: 'jsonp',
+            async: true,
+        }).done(function(data) {
+            console.log(data);
+            let recentMessages = data.messages;
+            for (let j = 0; j < recentMessages.length; j++) {
+                //
+            }
+        });
+    }
 }
+
 export default TwitchApi;

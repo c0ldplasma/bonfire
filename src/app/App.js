@@ -14,6 +14,7 @@ import EmoteManager from './EmoteManager.js';
 import NameColorManager from './NameColorManager.js';
 import FavoritesList from './FavoritesList.js';
 import ChatManager from './ChatManager.js';
+import MessageParser from './MessageParser.js';
 
 /**
  * Represents the whole application
@@ -41,7 +42,8 @@ class App {
             new FavoritesList(this.badgeManager_, this.emoteManager_, this.chatManager_);
 
         new SendIRCConnection(this.appUser_);
-        new ReceiveIRCConnection(this.appUser_);
+        new ReceiveIRCConnection(this.appUser_,
+            new MessageParser(this.nameColorManager_), this.chatManager_);
         this.main_();
     }
 
@@ -85,4 +87,5 @@ class App {
         });
     }
 }
+
 export default App;

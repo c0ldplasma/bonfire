@@ -1,5 +1,6 @@
 'use strict';
 import TwitchConstants from './TwitchConstants.js';
+
 /**
  * Websocket connection to Twitch
  * @abstract
@@ -22,6 +23,7 @@ class TwitchIRCConnection {
         this.connection_.onopen = this.onOpen_;
         this.connection_.onerror = this.onError_;
     }
+
     onOpen_() {
         this.connection_.send('CAP REQ :twitch.tv/membership');
         this.connection_.send('CAP REQ :twitch.tv/tags');
@@ -44,6 +46,16 @@ class TwitchIRCConnection {
      * @param {object} event event triggered by the Websocket connection
      * @private
      */
-    onMessage_(event) {};
+    onMessage_(event) {
+    };
+
+    leaveChat(chatName) {
+        this.connection_.send('PART #' + chatName);
+    }
+
+    joinChat(chatName) {
+        this.connection_.send('JOIN #' + chatName);
+    }
 }
+
 export default TwitchIRCConnection;

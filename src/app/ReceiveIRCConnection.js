@@ -1,5 +1,6 @@
 'use strict';
 import TwitchIRCConnection from './TwitchIRCConnection.js';
+
 /**
  * Websocket connection to Twitch for receiving
  */
@@ -38,4 +39,5 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
         }
     }
 }
+
 export default ReceiveIRCConnection;
