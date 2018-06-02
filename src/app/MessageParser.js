@@ -136,8 +136,6 @@ class MessageParser {
      * @private
      */
     static parseRoomstate_(msg, chatName) {
-        console.log(chatName.length);
-        console.log(msg);
         let roomstateMsg = msg.split(' ')[0];
         roomstateMsg = roomstateMsg.substring(1, roomstateMsg.length);
         roomstateMsg = roomstateMsg.split(';');

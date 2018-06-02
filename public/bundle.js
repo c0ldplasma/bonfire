@@ -1,2 +1,2423 @@
-!function(){"use strict";class e{static get CLIENT_ID(){return"3392e4aec6s6388tlnecfrtl5nh523"}static get PERMISSION_SCOPE(){return"chat_login+user_blocks_edit+user_blocks_read+user_subscriptions"}static get SELF_URL(){return"https://chats.c0ldplasma.de/"}static get AUTHORIZE_URL(){return`https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id=\n        ${e.CLIENT_ID}&redirect_uri=${e.SELF_URL}&scope=\n        ${e.PERMISSION_SCOPE}`}static get GLOBAL_BADGES_API_URL(){return"https://badges.twitch.tv/v1/badges/global/display"}static get WEBSOCKET_URL(){return"wss://irc-ws.chat.twitch.tv:443"}}class t{static getUsers(t,s,a){$.ajax({context:s,url:"https://api.twitch.tv/kraken/users?login="+t,headers:{Accept:"application/vnd.twitchtv.v5+json","Client-ID":e.CLIENT_ID},async:!0}).done(a)}static getUserFromOAuth(t,s){$.ajax({context:t,url:"https://api.twitch.tv/kraken",headers:{Accept:"application/vnd.twitchtv.v5+json","Client-ID":e.CLIENT_ID,Authorization:"OAuth "+localStorage.accessToken},async:!1}).done(s)}static getChatterList(e,t,s){$.ajax({context:t,url:"https://tmi.twitch.tv/group/user/"+e+"/chatters",headers:{Accept:"application/vnd.twitchtv.v5+json"},dataType:"jsonp",async:!0}).done(s)}static getRecentMessages(e){$.ajax({url:"https://tmi.twitch.tv/api/rooms/"+e+"/recent_messages?count=50",headers:{Accept:"application/vnd.twitchtv.v5+json"},dataType:"jsonp",async:!0}).done(function(e){console.log(e);let t=e.messages;for(let e=0;e<t.length;e++);})}}class s{constructor(){this.userName_="",this.userNameLC_="",this.userId_="",this.requestAppUserData()}getUserName(){return this.userName_}getUserId(){return this.userId_}requestAppUserData(){t.getUserFromOAuth(this,function(t){!1===t.token.valid?window.location.replace(e.AUTHORIZE_URL):void 0!==t.token?(this.userName_=t.token.user_name,this.userNameLC_=this.userName_.toLowerCase(),this.userId_=t.token.user_id):alert("Error while getting username")})}}var a="0.4.0";class n{constructor(t){if(this.appUser_=t,new.target===n)throw new TypeError("Cannot construct abstract instances of TwitchIRCConnection directly");this.connection_=new WebSocket(e.WEBSOCKET_URL),this.connection_.onopen=this.onOpen_.bind(this),this.connection_.onerror=n.onError_.bind(this)}onOpen_(){this.connection_.send("CAP REQ :twitch.tv/membership"),this.connection_.send("CAP REQ :twitch.tv/tags"),this.connection_.send("CAP REQ :twitch.tv/commands"),this.connection_.send("PASS oauth:"+localStorage.accessToken),this.connection_.send("NICK "+this.appUser_.getUserName())}static onError_(){console.log("WebSocket Error "+error),alert("ERROR: "+error)}onMessage_(e){}leaveChat(e){this.connection_.send("PART #"+e)}joinChat(e){this.connection_.send("JOIN #"+e)}send(e){this.connection_.send(e)}}class i extends n{constructor(e){super(e),this.connection_.onmessage=this.onMessage_.bind(this)}onMessage_(e){let t=e.data.split("\n");for(let e=0;e<t.length;e++){let s=t[e];s.length<=1||s.startsWith("PING :tmi.twitch.tv")&&this.connection_.send("PONG :tmi.twitch.tv")}}}class o extends n{constructor(e,t,s){super(e),this.messageParser_=t,this.chatManager_=s,this.connection_.onmessage=this.onMessage_.bind(this)}onMessage_(e){let t=e.data.split("\n");for(let e=0;e<t.length;e++){let s=t[e];if(s.startsWith("PING :tmi.twitch.tv"))this.connection_.send("PONG :tmi.twitch.tv");else if(s.length>1){let e=this.messageParser_.parseMessage(s);this.chatManager_.addMessages(e)}}}}class l{constructor(){this.badgesChannels_={},this.badgesGlobal_=null,this.downloadGlobalBadges_()}getBadgesChannels(){return this.badgesChannels_}getBadgesGlobal(){return this.badgesGlobal_}downloadGlobalBadges_(){$.ajax({context:this,url:e.GLOBAL_BADGES_API_URL,headers:{Accept:"application/vnd.twitchtv.v5+json","Client-ID":e.CLIENT_ID},async:!0}).done(function(e){this.badgesGlobal_=e.badge_sets})}downloadChannelBadges(t,s){$.ajax({context:this,url:"https://badges.twitch.tv/v1/badges/channels/"+s+"/display",headers:{Accept:"application/vnd.twitchtv.v5+json","Client-ID":e.CLIENT_ID},async:!0}).done(function(e){this.badgesChannels_[t]=e.badge_sets})}}class r{constructor(e){this.appUser_=e,this.userEmotes_={},this.bttvChannels_={},this.bttvGlobal_={},this.ffzChannels_={},this.ffzGlobal_={},this.downloadGlobalEmotes_()}getUserEmotes(){return this.userEmotes_}getBttvGlobal(){return this.bttvGlobal_}getFfzGlobal(){return this.ffzGlobal_}getBttvChannels(){return this.bttvChannels_}getFfzChannels(){return this.ffzChannels_}downloadGlobalEmotes_(){$.ajax({context:this,url:"https://api.twitch.tv/kraken/users/"+this.appUser_.getUserId()+"/emotes",headers:{Accept:"application/vnd.twitchtv.v5+json","Client-ID":e.CLIENT_ID,Authorization:"OAuth "+localStorage.accessToken},async:!0}).done(function(e){this.userEmotes_=e.emoticon_sets,console.log(e.emoticon_sets)}),$.ajax({context:this,url:"https://api.betterttv.net/2/emotes",async:!0}).done(function(e){this.bttvGlobal_=e.emotes}),$.ajax({context:this,url:"https://api.frankerfacez.com/v1/set/global",async:!0}).done(function(e){this.ffzGlobal_=e})}downloadChannelEmotes(e){this.downloadFfzChannelEmotes_(e),this.downloadBttvChannelEmotes_(e)}downloadBttvChannelEmotes_(e){$.ajax({context:this,url:"https://api.betterttv.net/2/channels/"+e,async:!0,dataType:"json",error:function(t){404===t.status&&console.log("No BTTV Emotes in Channel: "+e)}}).done(function(t){this.bttvChannels_[e]=t.emotes})}downloadFfzChannelEmotes_(e){$.ajax({context:this,url:"https://api.frankerfacez.com/v1/room/"+e,async:!0,dataType:"json",error:function(t){404===t.status&&console.log("No FFZ Emotes in Channel: "+e)}}).done(function(t){this.ffzChannels_[e]=t})}}class h{constructor(){this.userColors_={}}getUserColors(){return this.userColors_}addUserColor(e,t){this.userColors_[e]=t}static randomColor(){let e=["#ff0000","#ff4500","#ff69b4","#0000ff","#2e8b57","#8a2be2","#008000","#daa520","#00ff7f","#b22222","#d2691e","#ff7f50","#5f9ea0","#9acd32","#1e90ff"];return e[Math.floor(Math.random()*e.length)]}static colorCorrection(e){let t=h.hex2rgb_(e),s=h.rgb2yiq_(t.r,t.g,t.b);for(;e[0]<.5;){t=h.yiq2rgb_(s.y,s.i,s.q);let e=h.rgb2hsl_(t.r,t.g,t.b);e.l=Math.min(Math.max(0,.1+.9*e.l),1),t=h.hsl2rgb_(e.h,e.s,e.l),s=h.rgb2yiq_(t.r,t.g,t.b)}return t=h.yiq2rgb_(s.y,s.i,s.q),(e=h.rgb2hex_(t.r,t.g,t.b)).substring(0,7)}static rgb2hex_(e,t,s){return"#"+((1<<24)+(e<<16)+(t<<8)+s).toString(16).slice(1)}static hex2rgb_(e){let t=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(e);return t?{r:parseInt(t[1],16),g:parseInt(t[2],16),b:parseInt(t[3],16)}:null}static rgb2yiq_(e,t,s){return{y:(.299*e+.587*t+.114*s)/255,i:(.596*e+-.275*t+-.321*s)/255,q:(.212*e+-.523*t+.311*s)/255}}static yiq2rgb_(e,t,s){let a=255*(e+.956*t+.621*s),n=255*(e+-.272*t+-.647*s),i=255*(e+-1.105*t+1.702*s);return a<0?a=0:a>255&&(a=255),n<0?n=0:n>255&&(n=255),i<0?i=0:i>255&&(i=255),{r:a,g:n,b:i}}static rgb2hsl_(e,t,s){e/=255,t/=255,s/=255;let a=Math.max(e,t,s),n=Math.min(e,t,s),i=(a+n)/2,o=(a+n)/2,l=(a+n)/2;if(a===n)i=o=0;else{let r=a-n;switch(o=l>.5?r/(2-a-n):r/(a+n),a){case e:i=(t-s)/r+(t<s?6:0);break;case t:i=(s-e)/r+2;break;case s:i=(e-t)/r+4}i/=6}return{h:360*i,s:o,l:l}}static hsl2rgb_(e,t,s){if(void 0===e)return{r:0,g:0,b:0};let a,n,i,o=(1-Math.abs(2*s-1))*t,l=e/60,r=o*(1-Math.abs(l%2-1));0===(l=Math.floor(l))?(a=o,n=r,i=0):1===l?(a=r,n=o,i=0):2===l?(a=0,n=o,i=r):3===l?(a=0,n=r,i=o):4===l?(a=r,n=0,i=o):5===l&&(a=o,n=0,i=r);let h=s-o/2;return a+=h,n+=h,i+=h,{r:Math.round(255*a),g:Math.round(255*n),b:Math.round(255*i)}}}class c{constructor(e,t,s){this.isVisible_=!0,this.badgeManager_=e,this.emoteManager_=t,this.chatManager_=s,$("#addFavFromInput").click(this.addFavToList.bind(this)),$("#newFavInput").keydown(function(e){13===e.keyCode&&$("#addFavFromInput").click()}),document.getElementById("channelListToggle").addEventListener("click",this.toggleFavList),this.loadFavoritesFromLocalStorage_()}loadFavoritesFromLocalStorage_(){try{let e=JSON.parse(localStorage.getItem("channels"));if(null!==e){let t=0,s="";for(let a=0;a<e.length;a++)s+=e[a]+",",++t>99&&(s=s.slice(0,-1),this.addFavToList(s),s="",t=0);s.length>1&&(s=s.slice(0,-1),this.addFavToList(s))}else{let e=[];localStorage.setItem("channels",JSON.stringify(e))}}catch(e){alert("Error: "+e);let t=[];localStorage.setItem("channels",JSON.stringify(t))}}toggleFavList(){this.isVisible_=!this.isVisible_,this.isVisible_?(document.getElementById("fav-channel-list").style.display="none",$(".container").css({width:"100%"}),document.getElementById("channelListToggle").style.backgroundImage="url(./img/arrow_up.svg)"):(document.getElementById("fav-channel-list").style.display="inline-block",$(".container").css({width:"calc(100% - 250px)"}),document.getElementById("channelListToggle").style.backgroundImage="url(./img/arrow_down.svg)")}addFavToList(e){let s=document.getElementById("newFavInput").value;"string"===$.type(e)&&(s=e);let a=(s=s.replace(/\s+/g,"")).split(",").length;s.length>=3&&t.getUsers(s,this,function(e){let t=a-e._total;for(let t=0;t<e._total;t++){let s=e.users[t].display_name,a=e.users[t]._id,n=e.users[t].logo;document.getElementById("newFavInput").placeholder="",this.addFavLine_(s,n,a)}t>0&&this.showChannelDoesNotExistInfo_(t)})}showChannelDoesNotExistInfo_(e){document.getElementById("newFavInput").value="",$("#newFavInput").queue(function(t){let s=e>1?" Channels do not exist.":" Channel does not exist.";$(this).attr("placeholder",e+s),t()}).delay(5e3).queue(function(e){$(this).attr("placeholder",""),e()})}addFavLine_(e,t,s){let a=e.toLowerCase();if(this.badgeManager_.downloadChannelBadges(a,s),this.emoteManager_.downloadChannelEmotes(a),e.length>0&&0===$(".favEntry[id$='"+a+"']").length){document.getElementById("newFavInput").value="";let s=$("#fav-channel-list");s.append('<div class="favEntry" id="'+a+'"><img class="profilePic" src="'+(null!=t?t:"/img/defaultProfile.png")+'" /><input class="favEntryAddChatButton" id="'+a+'" type="button" value="'+e+'"><input class="favEntryRemoveButton" id="'+a+'" type="button" ></div>'),$(document).on("click",".favEntryAddChatButton[id$='"+a+"']",this,function(t){t.data.chatManager_.addChat(e)}),$(document).on("click",".favEntryRemoveButton[id$='"+a+"']",this,function(e){$(this).parent().remove(),e.data.removeChannelFromLocalStorage_(a)}),s.sortable({axis:"y",animation:300,cursor:"move",revert:200,scroll:!0,containment:"parent"})}this.storeChannelInLocalStorage_(a)}storeChannelInLocalStorage_(e){let t=JSON.parse(localStorage.getItem("channels")),s=t.indexOf(e);s>-1&&t.splice(s,1),t.push(e),localStorage.setItem("channels",JSON.stringify(t))}removeChannelFromLocalStorage_(e){let t=JSON.parse(localStorage.getItem("channels")),s=t.indexOf(e);s>-1&&t.splice(s,1),localStorage.setItem("channels",JSON.stringify(t))}}class d{constructor(e,t){this.chatName_=e,this.timestamp_=this.getCurrentTimeFormatted_(),this.content_=t.trim()}getContent(){return this.content_}getTimestamp(){return this.timestamp_}getChatName(){return this.chatName_}getCurrentTimeFormatted_(){let e,t=new Date;return e=t.getHours()>=10&&t.getMinutes()>=10?t.getHours()+":"+t.getMinutes():t.getHours()<10&&t.getMinutes()>=10?"0"+t.getHours()+":"+t.getMinutes():t.getHours()>=10&&t.getMinutes()<10?t.getHours()+":0"+t.getMinutes():"0"+t.getHours()+":0"+t.getMinutes()}getHtml(){return'<li style="border-top: 1px solid #673ab7;border-bottom: 1px solid #673ab7;padding-top: 3px; padding-bottom: 3px;"><span style="color: gray;font-size: 11px;">'+this.timestamp_+"</span>  "+this.content_+"</li>"}}class g extends d{constructor(e,t){super(e,t)}getHtml(){return'<p style="color: gray; font-size: 11px;padding-left: 10px;font-weight: 200;">'+this.getContent()+"</p>"}}class p{constructor(e,t,s,a){console.log("Send connection 1: "+a),this.channelName_=e,this.channelNameLC_=e.toLowerCase(),this.emoteManager_=t,this.receiveIrcConnection_=s,this.sendIrcConnection_=a,console.log("Send connection 2: "+this.sendIrcConnection_),this.messageCount_=0,this.containerCount_=0,this.MESSAGE_LIMIT_=2e5,this.MESSAGES_IN_CONTAINER_=100}addMessage(e){if(e instanceof g){$(".chatInput#"+e.getChatName().toLowerCase()).append(e.getHtml())}else{let t=$("#"+this.channelName_.toLowerCase()+"contentArea");(0===t.children("div").length||0!==t.children("div").length&&t.children("div:last").children("li").length>=this.MESSAGES_IN_CONTAINER_)&&(t.append("<div></div>"),this.containerCount_++),t.children("div:last").append(e.getHtml()),this.messageCount_++,this.limitMessages_(),this.hideNotVisibleMessages(),this.correctScrollPosition_()}}limitMessages_(){this.messageCount_>=this.MESSAGE_LIMIT_&&($("#"+this.channelName_+" .chatContent .chatMessageList div:first").remove(),this.messageCount_-=this.MESSAGES_IN_CONTAINER_,this.containerCount_--)}hideNotVisibleMessages(){if(this.containerCount_>3&&this.isScrolledToBottom()){$("#"+this.channelName_+"contentArea").children("div:visible").slice(0,-3).hide()}}isScrolledToBottom(){let e=!1,t=$("#"+this.channelNameLC_+"scrollArea");return t[0].scrollHeight-t.scrollTop()<t.outerHeight()+50&&(e=!0),e}correctScrollPosition_(){let e=this.isScrolledToBottom(),t=$("#"+this.channelNameLC_+"scrollArea");if(e){let e=t[0].scrollHeight;t.scrollTop(e+50),$("#"+this.channelNameLC_+" .chatContent .chatMessageList").find("p:last").imagesLoaded(function(){setTimeout(function(){e=t[0].scrollHeight,t.scrollTop(e+50)},50)})}else if(!e&&$("#"+this.channelNameLC_+" .chatNewMessagesInfo").is(":hidden")){let e=t[0].scrollHeight;t.scrollTop(e+50)}}getHtml(){let e=this.channelName_.toLowerCase();return'<div class="chat" id="'+e+'"><div class="chatHeader" id="'+e+'"><button class="toggleViewerlist" id="'+e+'"></button><span>'+this.channelName_+'</span><button class="removeChat" id="'+e+'"></button><button class="toggleStream" id="'+e+'"></button></div><div class="chatContent" id="'+e+'scrollArea"><div class="chatMessageList" id="'+e+'contentArea"></div></div><div class="chatInput" id="'+e+'"><div class="chatNewMessagesInfo" id="'+e+'">More messages below.</div><img class="kappa" src="/img/Kappa.png" /><textarea maxlength="500" class="chatInputField" id="'+e+'" placeholder="Send a message..."></textarea><div class="emoteMenu"><div class="emotes"><div class="bttvEmotes" style="width: 100%;"><h3>BTTV Emotes</h3></div><div class="bttvChannelEmotes" style="width: 100%;"><h3>BTTV Channel Emotes</h3></div><div class="ffzEmotes" style="width: 100%;"><h3>FFZ Emotes</h3></div><div class="ffzChannelEmotes" style="width: 100%;"><h3>FFZ Channel Emotes</h3></div></div></div></div><div class="chatViewerlist" id="'+e+'"></div>'}addAbilities(){this.addEmotesToEmoteMenu_(),this.addEmoteMenuImgClickAbility_(),this.addEmoteMenuGroupClickAbility_(),this.addEmoteMenuToggleAbility_(),this.addEmoteMenuDraggableAbility_(),this.addEmoteMenuResizableAbility_(),this.addStreamIframeAbility_(),this.addResizeAbility_(),this.addChatterListAbility_(),this.addSendMessagesAbility_(),this.addNewMessageInfoAbility_()}addEmotesToEmoteMenu_(){let e=this.channelName_.toLowerCase(),t=this.emoteManager_.getUserEmotes();for(let s in t)if({}.hasOwnProperty.call(t,s)){let a=t[s];$(".chatInput[id$='"+e+"'] .emoteMenu .emotes").prepend('<div class="'+s+'" style="width: 100%;"><h3>'+s+"</h3></div>");for(let t in a)({}).hasOwnProperty.call(a,t)&&$(".chatInput[id$='"+e+"'] .emoteMenu .emotes ."+s).append("<img src='https://static-cdn.jtvnw.net/emoticons/v1/"+a[t].id+"/1.0' alt='"+a[t].code+"' />")}let s=this.emoteManager_.getBttvGlobal();for(let t=0;t<s.length;t++)null==s[t].channel&&$(".chatInput[id$='"+e+"'] .emoteMenu .bttvEmotes").append('<img src="https://cdn.betterttv.net/emote/'+s[t].id+'/1x" alt="'+s[t].code+'" />');let a=this.emoteManager_.getFfzGlobal();for(let t=0;t<a.default_sets.length;t++){let s=a.default_sets[t],n=a.sets[s].emoticons;for(let t=0;t<n.length;t++)$(".chatInput[id$='"+e+"'] .emoteMenu .ffzEmotes").append("<img src='https:"+n[t].urls[1]+"' alt='"+n[t].name+"' />")}let n=this.emoteManager_.getBttvChannels();if(n.hasOwnProperty(e))for(let t=0;t<n[e].length;t++){let s=JSON.stringify(n[e][t].id).substring(1,JSON.stringify(n[e][t].id).length-1);$(".chatInput[id$='"+e+"'] .emoteMenu .bttvChannelEmotes").append("<img src='https://cdn.betterttv.net/emote/"+s+"/1x' alt='"+n[e][t].code+"' />")}let i=this.emoteManager_.getFfzChannels();if(i.hasOwnProperty(e)){let t=i[e].room._id;if(null!=i[e].sets[t]){let s=i[e].sets[t].emoticons;for(let t=0;t<s.length;t++)$(".chatInput[id$='"+e+"'] .emoteMenu .ffzChannelEmotes").append("<img src='https:"+s[t].urls[1]+"' alt='"+s[t].name+"' />")}}}addEmoteMenuImgClickAbility_(){let e=this.channelName_.toLowerCase();$(".chatInput[id$='"+e+"'] .emoteMenu img").click(function(){let t,s=$(this).attr("alt"),a=$(".chatInputField[id$='"+e+"']"),n=a.val();t=!n.endsWith(" ")&&n.length>0?n+" "+s+" ":n+s+" ",a.val(t)})}addEmoteMenuGroupClickAbility_(){let e=this.channelName_.toLowerCase();$(".chatInput[id$='"+e+"'] .emoteMenu .emotes h3").click(function(){"18px"===$(this).parent().css("height")?$(this).parent().css({height:""}):$(this).parent().css({height:"18px"})})}addEmoteMenuToggleAbility_(){let e=this.channelName_.toLowerCase(),t=$(".chatInput[id$='"+e+"'] .emoteMenu");$(".chatInput[id$='"+e+"'] .kappa").click(function(){t.is(":hidden")?$(".chatInput[id$='"+e+"'] .emoteMenu").show():(t.hide(),t.css({top:"",left:"",right:"",bottom:""}))})}addEmoteMenuDraggableAbility_(){let e=this.channelName_.toLowerCase(),t=$(".chatInput[id$='"+e+"'] .emoteMenu"),s=$("#main-chat-area");t.draggable({containment:s})}addEmoteMenuResizableAbility_(){let e=this.channelName_.toLowerCase();$(".chatInput[id$='"+e+"'] .emoteMenu").resizable({handles:"n, ne, e",minHeight:200,minWidth:200})}addStreamIframeAbility_(){let e=this.channelName_.toLowerCase();$(document).on("click",".toggleStream[id$='"+e+"']",function(){$(this).parent().parent().find(".chatStream").length?($(this).parent().parent().find(".chatStream").remove(),$(this).parent().parent().find(".chatContent").css({height:"calc(100% - 105px)"}),$(this).parent().parent().find(".chatViewerlist").css({height:"calc(100% - 35px)"})):($(this).parent().parent().prepend('<div class="chatStream" id="'+e+'"><div class="chatStreamInner"><iframe src="https://player.twitch.tv/?channel='+e+'" frameborder="0" allowfullscreen="true" scrolling="no" height="100%" width="100%"></iframe></div></div>'),$(this).parent().parent().find(".chatContent").css({height:"calc(100% - 105px - "+$(this).parent().parent().find(".chatStream").outerHeight()+"px )"}),$(this).parent().parent().find(".chatViewerlist").css({height:"calc(100% - 35px - "+$(this).parent().parent().find(".chatStream").outerHeight()+"px )"}))})}addResizeAbility_(){let e=this.channelName_.toLowerCase();$(document).on("resize",".chat[id$='"+e+"']",function(){$(this).find(".chatContent").css({height:"calc(100% - 105px - "+$(this).find(".chatStream").outerHeight()+"px )"}),$(this).find(".chatViewerlist").css({height:"calc(100% - 35px - "+$(this).find(".chatStream").outerHeight()+"px )"})}),$(".chat[id$='"+e+"']").resizable({handles:"e",start:function(){$("iframe").css("pointer-events","none")},stop:function(){$("iframe").css("pointer-events","auto")}});let t=$(".chatContent[id$='"+e+"scrollArea'] .chatMessageList").height();$(".chat[id$='"+e).resize(function(){let s=$(".chatNewMessagesInfo[id$='"+e+"']"),a=$("#"+e+" .chatContent"),n=$(".chatContent[id$='"+e+"contentArea']");s.is(":hidden")&&t<=n.height()&&(a.scrollTop(a[0].scrollHeight+50),t=n.height()),s.is(":hidden")&&a.scrollTop(a[0].scrollHeight+50)})}addChatterListAbility_(){let e=this.channelName_.toLowerCase(),s=0;$(document).on("click",".toggleViewerlist[id$='"+e+"']",function(){if(s%2!=0)$(this).parent().parent().find("div.chatViewerlist").hide(),$(this).parent().parent().find("div.chatContent").show(),$(this).parent().parent().find("div.chatInput").show();else{$(this).parent().parent().find("div.chatContent").hide(),$(this).parent().parent().find("div.chatInput").hide(),$(this).parent().parent().find("div.chatViewerlist").show();let s=$(this).parent().parent().find("div.chatViewerlist");t.getChatterList(e,this,function(e){s.empty(),e=e.data,s.append("Chatter Count: "+e.chatter_count+"<br /><br />");let t=e.chatters;if(t.moderators.length>0){s.append("<h3>Moderators</h3>");let e="<ul>";for(let s=0;s<t.moderators.length;s++)e+="<li>"+t.moderators[s]+"</li>";e+="</ul><br />",s.append(e)}if(t.staff.length>0){s.append("<h3>Staff</h3>");let e="<ul>";for(let s=0;s<t.staff.length;s++)e+="<li>"+t.staff[s]+"</li>";e+="</ul><br />",s.append(e)}if(t.admins.length>0){s.append("<h3>Admins</h3>");let e="<ul>";for(let s=0;s<t.admins.length;s++)e+="<li>"+t.admins[s]+"</li>";e+="</ul><br />",s.append(e)}if(t.global_mods.length>0){s.append("<h3>Global Mods</h3>");let e="<ul>";for(let s=0;s<t.global_mods.length;s++)e+="<li>"+t.global_mods[s]+"</li>";e+="</ul><br />",s.append(e)}if(t.viewers.length>0){s.append("<h3>Viewers</h3>");let e="<ul>";for(let s=0;s<t.viewers.length;s++)e+="<li>"+t.viewers[s]+"</li>";e+="</ul><br />",s.append(e)}})}s++})}addSendMessagesAbility_(){let e=this.channelName_.toLowerCase();$(".chatInputField[id$='"+e+"']").keydown(this,function(t){13===t.keyCode?(t.preventDefault(),$(this).val().startsWith(".")||$(this).val().startsWith("/")?t.data.receiveIrcConnection_.send("PRIVMSG #"+e+" :"+$(this).val()):t.data.sendIrcConnection_.send("PRIVMSG #"+e+" :"+$(this).val()),$(this).val("")):9===t.keyCode&&(t.preventDefault(),0===$(this).val().length||$(this).val().endsWith(" ")||console.log("WUB"))})}addNewMessageInfoAbility_(){let e=this.channelName_.toLowerCase();$(".chatNewMessagesInfo[id$='"+e+"']").click(function(){$(this).hide();let t=$("#"+e+" .chatContent");t.scrollTop(t[0].scrollHeight)}),$(".chatContent[id$='"+e+"scrollArea']").scroll(function(){0!==$(this).scrollLeft()&&$(this).scrollLeft(0),$(this)[0].scrollHeight-$(this).scrollTop()<$(this).outerHeight()+50?$(".chatNewMessagesInfo[id$='"+e+"']").hide():$(".chatNewMessagesInfo[id$='"+e+"']").show(),$(this).scrollTop()<200&&$(".chatContent[id$='"+e+"scrollArea'] .chatMessageList").children("div:hidden:last").show()})}}class m{constructor(e){this.chatList_={},this.emoteManager_=e,$("#main-chat-area").scroll(function(){0!==$(this).scrollTop()&&$(this).scrollTop(0)})}setReceiveIrcConnection(e){this.receiveIrcConnection_=e}setSendIrcConnection(e){this.sendIrcConnection_=e}addMessages(e){for(let t=0;t<e.length;t++){let s=e[t].getChatName().toLowerCase();this.chatList_[s].addMessage(e[t])}}isChatAlreadyAdded(e){return this.chatList_.hasOwnProperty(e)}removeChat_(e){delete this.chatList_[e],$(document).off("click",".toggleStream[id$='"+e+"']"),$(this).parent().parent().remove(),this.receiveIrcConnection_.leaveChat(e),this.sendIrcConnection_.leaveChat(e)}addChat(e){let t=e.toLowerCase();if(!this.isChatAlreadyAdded(t)){this.chatList_[t]=new p(e,this.emoteManager_,this.receiveIrcConnection_,this.sendIrcConnection_);let s=$("#main-chat-area");s.append(this.chatList_[t].getHtml()),this.chatList_[t].addAbilities(),this.receiveIrcConnection_.joinChat(t),this.sendIrcConnection_.joinChat(t),$(document).find(".removeChat#"+t).on("click",this.removeChat_(e)),s.sortable({handle:".chatHeader",start(e,t){t.placeholder.width(t.item.width()),t.placeholder.height(t.item.height())},animation:300,cursor:"move",revert:200,scroll:!0,containment:"parent"})}}}class u extends d{constructor(e,t,s,a,n,i,o,l,r){super(e,t),this.badges_=s,this.emotes_=a,this.chatterName_=n,this.chatterColor_=i,this.action_=o,this.emoteManager_=l,this.badgeManager_=r}getHtml(){let e=this.replaceTwitchEmotesAndEscapeHtml(this.getContent());return e=u.matchURL_(e),e=this.replaceBttvEmotes(e),e=this.replaceFfzEmotes(e),e=this.replaceBadges(e)}replaceTwitchEmotesAndEscapeHtml(e){if(""!==this.emotes_[0]&&null!=this.emotes_[0]){let t=[];for(let e=0;e<this.emotes_.length;e++){let s=this.emotes_[e].split(":"),a=s[0],n=s[1].split(",");for(let e=0;e<n.length;e++)t.push([n[e].split("-")[0],n[e].split("-")[1],a])}for(let e=0;e<t.length-1;e++)for(let s=e+1;s<t.length;s++)if(parseInt(t[e][0])>parseInt(t[s][0])){let a=t[e];t[e]=t[s],t[s]=a}let s=0,a=0;for(let n=0;n<t.length;n++){let i=e,o=e.substring(0,a)+u.escapeString_(e.substring(a,parseInt(t[n][0])+s))+'<span style=" display: inline-block;" >&#x200b;<img src=\'https://static-cdn.jtvnw.net/emoticons/v1/'+t[n][2]+"/1.0' /></span>";e=o+e.substring(parseInt(t[n][1])+1+s,e.length),a=o.length,s+=e.length-i.length}}else e=u.escapeString_(e);return e}replaceBttvEmotes(e){let t=this.emoteManager_.getBttvGlobal();for(let s=0;s<t.length;s++)if(null==t[s].channel){let a=JSON.stringify(t[s].code);a="(^|\\b|\\s)"+(a=a.substring(1,a.length-1)).replace(/[.?*+^$[\]\\(){}|-]/g,"\\$&")+"(?=\\s|$)";let n=new RegExp(a,"g"),i=JSON.stringify(t[s].id).substring(1,JSON.stringify(t[s].id).length-1);e=e.replace(n,' <span style=" display: inline-block;" >&#x200b;<img src=\'https://cdn.betterttv.net/emote/'+i+"/1x' alt='"+t[s].code+"' /></span> ")}let s=this.emoteManager_.getBttvChannels();if(s.hasOwnProperty(this.chatName_))for(let t=0;t<s[this.chatName_].length;t++){let a=JSON.stringify(s[this.chatName_][t].code);a="(^|\\b|\\s)"+(a=a.substring(1,a.length-1)).replace(/[.?*+^$[\]\\(){}|-]/g,"\\$&")+"(?=\\s|$)";let n=new RegExp(a,"g"),i=JSON.stringify(s[this.chatName_][t].id).substring(1,JSON.stringify(s[this.chatName_][t].id).length-1);e=e.replace(n,' <span style=" display: inline-block;" >&#x200b;<img src=\'https://cdn.betterttv.net/emote/'+i+"/1x' alt='"+s[this.chatName_][t].code+"' /></span> ")}return e}replaceFfzEmotes(e){let t=this.emoteManager_.getFfzGlobal();for(let s=0;s<t.default_sets.length;s++){let a=t.default_sets[s],n=t.sets[a].emoticons;for(let t=0;t<n.length;t++){let s=JSON.stringify(n[t].name);s="(^|\\b|\\s)"+(s=s.substring(1,s.length-1)).replace(/[.?*+^$[\]\\(){}|-]/g,"\\$&")+"(?=\\s|$)";let a=new RegExp(s,"g");e=e.replace(a,' <span style=" display: inline-block;" >&#x200b;<img src=\'https:'+n[t].urls[1]+"' alt='"+n[t].name+"' /></span> ")}}let s=this.emoteManager_.getFfzChannels();if(s.hasOwnProperty(this.chatName_)){let t=s[this.chatName_].room._id;if(null!=s[this.chatName_].sets[t]){let a=s[this.chatName_].sets[t].emoticons;for(let t=0;t<a.length;t++){let s=JSON.stringify(a[t].name);s="(^|\\b|\\s)"+(s=s.substring(1,s.length-1)).replace(/[.?*+^$[\]\\(){}|-]/g,"\\$&")+"(?=\\s|$)";let n=new RegExp(s,"g");e=e.replace(n,' <span style=" display: inline-block;" >&#x200b;<img src=\'https:'+a[t].urls[1]+"' alt='"+a[t].name+"' /></span> ")}}}return e}replaceBadges(e){let t;t=this.action_?$('<li><span style="color: gray;font-size: 11px;">'+this.getTimestamp()+'</span><span style="color: '+this.chatterColor_+';font-weight: bold;"> '+this.chatterName_+'</span> <span style="color: '+this.chatterColor_+';">'+e+"</span></li>"):$('<li><span style="color: gray;font-size: 11px;">'+this.getTimestamp()+'</span><span style="color: '+this.chatterColor_+';font-weight: bold;"> '+this.chatterName_+"</span>: "+e+"</li>");for(let e=0;e<this.badges_.length;e++){let s=this.badges_[e].split("/"),a=this.badgeManager_.getBadgesChannels()[this.chatName_][s[0]];0===s[0].localeCompare("subscriber")?t.find("span:nth-of-type(2):first").before('<div style=" display: inline-block;vertical-align: -32%;border-radius: 2px;background-image: url('+a.versions[s[1]].image_url_1x+');" ></div>'):t.find("span:nth-of-type(2):first").before('<div style=" display: inline-block;vertical-align: -32%;border-radius: 2px;background-image: url('+this.badgeManager_.getBadgesGlobal()[s[0]].versions[s[1]].image_url_1x+');"></div>')}return t}static matchURL_(e){return e=e.replace(/((^|\s|&#32;)(http(s)?:\/\/.)?(www\.)?([-a-zA-Z0-9@:%_+~#=]|\.(?!\.)){2,256}\.[a-z]{2,8}\b([-a-zA-Z0-9@:%_+.~#?&/=]*))(?=(\s|$|&#32;))/g,function(e,t){let s=-1===t.indexOf("http://")&&-1===t.indexOf("https://"),a=' <a href="'+(s?"http://":"")+t+'" target="_blank">'+t+"</a>";return t.startsWith(" ")?a=' <a href="'+(s?"http://":"")+t.substring(1,t.length)+'" target="_blank">'+t+"</a>":t.startsWith("&#32;")&&(a=' <a href="'+(s?"http://":"")+t.substring(5,t.length)+'" target="_blank">'+t+"</a>"),a})}static escapeString_(e){return e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/`/g,"&#96;").replace(/!/g,"&#33;").replace(/@/g,"&#64;").replace(/\$/g,"&#36;").replace(/%/g,"&#37;").replace(/=/g,"&#61;").replace(/\+/g,"&#43;").replace(/{/g,"&#123;").replace(/}/g,"&#125;").replace(/\[/g,"&#91;").replace(/]/g,"&#93;")}}class _{constructor(e,t,s){this.nameColorManager_=e,this.emoteManager_=t,this.badgeManager_=s}parseMessage(e){let t=e.split(" "),s=_.parseChatName_(t);if(0===t[2].localeCompare("WHISPER"))return[];if(t[2].startsWith("GLOBALUSERSTATE"))return[];if(s.length<1)return[];let a=[];return 0===t[1].localeCompare("JOIN")||0===t[1].localeCompare("PART")||0===t[1].localeCompare("353")||0===t[1].localeCompare("366")||0===t[1].localeCompare("MODE")||(0===t[2].localeCompare("ROOMSTATE")?a=_.parseRoomstate_(e,s):0===t[2].localeCompare("USERSTATE")||(0===t[2].localeCompare("USERNOTICE")?a=this.parseUsernotice_(e,s):0===t[2].localeCompare("CLEARCHAT")||0===t[1].localeCompare("HOSTTARGET")||(0===t[2].localeCompare("NOTICE")||0===t[1].localeCompare("PRIVMSG")?a=_.parseNotice_(t,s):0===t[2].localeCompare("PRIVMSG")?a=this.parsePrivmsg_(t,s):s.length>=1?a=[new d(s,e)]:alert("Error")))),a}parsePrivmsg_(e,t){let s=e[1].split("!",1);s=s[0].substring(1,s[0].length);let a=e,n=a[0].substring(1,a[0].length),i=this.getMetaInfoWithColor_(n.split(";"),s);null!=i.username&&(s=i.username);let o=!1;(a=(a=a.slice(4).join(" ")).substring(1,a.length)).startsWith("ACTION")&&(o=!0,a=a.substring(8,a.length-2));let l=a,r=i.emotes,h=i.badges,c=i.color;return[new u(t,l,h,r,s,c,o,this.emoteManager_,this.badgeManager_)]}static parseRoomstate_(e,t){console.log(t.length),console.log(e);let s=e.split(" ")[0];s=(s=s.substring(1,s.length)).split(";");let a="";$("#"+t+" .chatInput").find("p").remove();for(let e=0;e<s.length;e++){let t=s[e].split("=");switch(t[0]){case"broadcaster-lang":a+=t[1]+"  ";break;case"emote-only":0===t[1].localeCompare("1")&&(a+="EMOTE-ONLY  ");break;case"followers-only":0!==t[1].localeCompare("-1")&&(a+="FOLLOW "+t[1]+"m  ");break;case"r9k":0===t[1].localeCompare("1")&&(a+="R9K  ");break;case"slow":0!==t[1].localeCompare("0")&&(a+="SLOW "+t[1]+"s  ");break;case"subs-only":0===t[1].localeCompare("1")&&(a+="SUB  ")}}return[new g(t,a)]}parseUsernotice_(e,t){let s=[],a=e.split(" ");a=a.slice(4).join(" ");let n=e.substring(1,e.length).split(" ")[0].split(";"),i=_.getMetaInfo_(n);return s.push(new d(t,null!=i.systemMsg?i.systemMsg+" ":"")),a.length>0&&s.push(this.parseMessage(e.split(" ")[0]+" :"+i.username.toLowerCase()+"!"+i.username.toLowerCase()+"@"+i.username.toLowerCase()+".tmi.twitch.tv PRIVMSG #"+t+" "+a)[0]),s}static parseNotice_(e,t){let s=e,a=0===e[2].localeCompare("NOTICE")?4:3;return s=s.slice(a).join(" "),[new d(t,s.substring(1,s.length))]}static parseChatName_(e){let t="";for(let s=0;s<e.length;s++)if(e[s].startsWith("#")){t=(t=e[s].slice(1,e[s].length)).trim();break}return t}getMetaInfoWithColor_(e,t){let s={color:"#acacbf",emotes:"",badges:""},a=!1;for(let n=0;n<e.length;n++){let i=e[n].split("=");i.length<=1||0===i[1].localeCompare("")||(0===i[0].localeCompare("color")?(s.color=i[1],0!==s.color.localeCompare("")||this.nameColorManager_.getUserColors().hasOwnProperty(t)?0===s.color.localeCompare("")&&this.nameColorManager_.getUserColors().hasOwnProperty(t)&&(s.color=this.nameColorManager_.getUserColors()[t]):(s.color=this.nameColorManager_.randomColor(),this.nameColorManager_.addUserColor(t,s.color)),a=!0):0===i[0].localeCompare("display-name")?s.username=i[1]:0===i[0].localeCompare("emotes")?s.emotes=i[1].split("/"):0===i[0].localeCompare("badges")?s.badges=i[1].split(","):0===i[0].localeCompare("system-msg")?s.systemMsg=i[1].replace(/\\s/g," "):0===i[0].localeCompare("emote-sets")&&(s.emoteSets=i[1].split(",")))}return a||(this.nameColorManager_.getUserColors().hasOwnProperty(t)?s.color=this.nameColorManager_.getUserColors()[t]:(s.color=h.randomColor(),this.nameColorManager_.addUserColor(t,s.color))),s.color=h.colorCorrection(s.color),s}static getMetaInfo_(e){let t={emotes:"",badges:""};for(let s=0;s<e.length;s++){let a=e[s].split("=");a.length<=1||0===a[1].localeCompare("")||(0===a[0].localeCompare("display-name")?t.username=a[1]:0===a[0].localeCompare("emotes")?t.emotes=a[1].split("/"):0===a[0].localeCompare("badges")?t.badges=a[1].split(","):0===a[0].localeCompare("system-msg")?t.systemMsg=a[1].replace(/\\s/g," "):0===a[0].localeCompare("emote-sets")&&(t.emoteSets=a[1].split(",")))}return t}}let f,C=window.location.href.split("#");C.length>1?(f=C[1].split("&"),localStorage.accessToken=f[0].split("=")[1]):null!==localStorage.getItem("accessToken")||window.location.replace(e.AUTHORIZE_URL),$(function(){new class{constructor(){document.title+=` ${a}`,this.appUser_=new s,this.nameColorManager_=new h,this.badgeManager_=new l,this.emoteManager_=new r(this.appUser_),this.chatManager_=new m(this.emoteManager_),new c(this.badgeManager_,this.emoteManager_,this.chatManager_),this.sendIrcConnection_=new i(this.appUser_),this.receiveIrcConnection_=new o(this.appUser_,new _(this.nameColorManager_,this.emoteManager_,this.badgeManager_),this.chatManager_),this.chatManager_.setReceiveIrcConnection(this.receiveIrcConnection_),this.chatManager_.setSendIrcConnection(this.sendIrcConnection_)}}})}();
+(function () {
+'use strict';
+
+class TwitchConstants {
+    /**
+     * @return {string} Client Id for authorization on the Twitch apis
+     * @constructor
+     */
+    static get CLIENT_ID() {
+        return 'xllef7inid2mbeqoaj2o6bsohg7pz7';
+    }
+
+    /**
+     * @return {string} Scope needed for the app (for requesting an access token)
+     * @constructor
+     */
+    static get PERMISSION_SCOPE() {
+        return 'chat_login+user_blocks_edit+user_blocks_read+user_subscriptions';
+    }
+
+    /**
+     * @return {string} URL of the app
+     * @constructor
+     */
+    static get SELF_URL() {
+        return 'http://localhost:5000/';
+    }
+
+    /**
+     * @return {string} URL for getting an access token
+     * @constructor
+     */
+    static get AUTHORIZE_URL() {
+        return `https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id=
+        ${TwitchConstants.CLIENT_ID}&redirect_uri=${TwitchConstants.SELF_URL}&scope=
+        ${TwitchConstants.PERMISSION_SCOPE}`;
+    }
+
+    /**
+     * @return {string} URL of the badges api for getting global badges
+     * @constructor
+     */
+    static get GLOBAL_BADGES_API_URL() {
+        return 'https://badges.twitch.tv/v1/badges/global/display';
+    }
+
+    /**
+     * @return {string} The URL for connecting to the IRC Chat
+     * @constructor
+     */
+    static get WEBSOCKET_URL() {
+        return 'wss://irc-ws.chat.twitch.tv:443';
+    }
+}
+
+class TwitchApi {
+    /**
+     * Gets the data to every user in the users parameter
+     * Calls the callback function with the JSON Data when request finished
+     * @param {string} users comma seperated list with usernames
+     * @param {object} context sets the Object 'this' is referring to in the callback function
+     * @param {function} callback function(data) that gets called after the request finished
+     */
+    static getUsers(users, context, callback) {
+        $.ajax({
+            context: context,
+            url: ('https://api.twitch.tv/helix/users'),
+            dataType: 'json',
+            headers: {
+                'Client-ID': TwitchConstants.CLIENT_ID,
+            },
+            data: {login: users},
+            async: true,
+        }).done(callback);
+    }
+
+    /**
+     * Gets the data to the user the OAuth token is from
+     * @param {object} context sets the Object 'this' is referring to in the callback function
+     * @param {function} callback function(data) that gets called after the request finished
+     */
+    static getUserFromOAuth(context, callback) {
+        $.ajax({
+            context: context,
+            url: ('https://api.twitch.tv/kraken'),
+            headers: {
+                'Accept': 'application/vnd.twitchtv.v5+json',
+                'Client-ID': TwitchConstants.CLIENT_ID,
+                'Authorization': ('OAuth ' + localStorage.accessToken),
+            },
+            async: false,
+        }).done(callback);
+    }
+
+    /**
+     * Gets the names of all chatters in the specified chat
+     * @param {string} chatName name of the chat
+     * @param {object} context sets the Object 'this' is referring to in the callback function
+     * @param {function} callback function(data) that gets called after the request finished
+     */
+    static getChatterList(chatName, context, callback) {
+        $.ajax({
+            context: context,
+            url: ('https://tmi.twitch.tv/group/user/' + chatName
+                + '/chatters'),
+            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
+            dataType: 'jsonp',
+            async: true,
+        }).done(callback);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Gets recent messages from the specified chat
+     * @param {string} chatId
+     */
+    static getRecentMessages(chatId) {
+        // Download recent messages
+        $.ajax({
+            url: ('https://tmi.twitch.tv/api/rooms/' + chatId
+                + '/recent_messages?count=50'),
+            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
+            dataType: 'jsonp',
+            async: true,
+        }).done(function(data) {
+            console.log(data);
+            let recentMessages = data.messages;
+            for (let j = 0; j < recentMessages.length; j++) {
+                //
+            }
+        });
+    }
+}
+
+/**
+ * @param data.token.user_name
+ * @param data.token.user_id
+ */
+class AppUser {
+    /**
+     * @constructor
+     */
+    constructor() {
+        /** @private */
+        this.userName_ = '';
+        // noinspection JSUnusedGlobalSymbols
+        /** @private */
+        this.userNameLC_ = '';
+        // noinspection JSUnusedGlobalSymbols
+        /** @private */
+        this.userId_ = '';
+
+        this.requestAppUserData();
+    }
+
+    /**
+     * Getter
+     * @return {string} this.userName_
+     */
+    getUserName() {
+        return this.userName_;
+    }
+    /**
+     * Getter
+     * @return {string} this.userId_
+     */
+    getUserId() {
+        return this.userId_;
+    }
+
+    /**
+     * Sends an ajax request to twitch to receive userName_ and userId_ of the AppUser
+     */
+    requestAppUserData() {
+        TwitchApi.getUserFromOAuth(this, function(data) {
+            if (data.token.valid === false) {
+                window.location.replace(TwitchConstants.AUTHORIZE_URL);
+            } else if (typeof(data.token) !== 'undefined') {
+                this.userName_ = data.token.user_name;
+                // noinspection JSUnusedGlobalSymbols
+                this.userNameLC_ = this.userName_.toLowerCase();
+                // noinspection JSUnusedGlobalSymbols
+                this.userId_ = data.token.user_id;
+            } else {
+                alert('Error while getting username');
+            }
+        });
+    }
+}
+
+var version = "0.4.0";
+
+class TwitchIRCConnection {
+    /**
+     * @param {AppUser} appUser
+     * @constructor
+     */
+    constructor(appUser) {
+        /** @private */
+        this.appUser_ = appUser;
+
+        if (new.target === TwitchIRCConnection) {
+            throw new TypeError('Cannot construct abstract instances ' +
+                'of TwitchIRCConnection directly');
+        }
+
+        this.connection_ = new WebSocket(TwitchConstants.WEBSOCKET_URL);
+        this.connection_.onopen = this.onOpen_.bind(this);
+        this.connection_.onerror = TwitchIRCConnection.onError_.bind(this);
+    }
+
+    /**
+     * Gets called when the connection established
+     * @private
+     */
+    onOpen_() {
+        this.connection_.send('CAP REQ :twitch.tv/membership');
+        this.connection_.send('CAP REQ :twitch.tv/tags');
+        this.connection_.send('CAP REQ :twitch.tv/commands');
+        this.connection_.send('PASS oauth:' + localStorage.accessToken);
+        this.connection_.send('NICK ' + this.appUser_.getUserName());
+    }
+
+    /**
+     * Gets called on error
+     * @private
+     */
+    static onError_() {
+        console.log('WebSocket Error ' + error);
+        alert('ERROR: ' + error);
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Gets called on message
+     * @param {object} event event triggered by the Websocket connection
+     * @private
+     * @abstract
+     */
+    onMessage_(event) {};
+
+    /**
+     * Leave the specified chat
+     * @param {string} chatName
+     */
+    leaveChat(chatName) {
+        this.connection_.send('PART #' + chatName);
+    }
+
+    /**
+     * Join the specified chat
+     * @param {string} chatName
+     */
+    joinChat(chatName) {
+        this.connection_.send('JOIN #' + chatName);
+    }
+
+    /**
+     * Sends the specified message to the Websocket connection
+     * @param {string} message
+     */
+    send(message) {
+        this.connection_.send(message);
+    }
+}
+
+class SendIRCConnection extends TwitchIRCConnection {
+    /**
+     * @param {AppUser} appUser
+     * @constructor
+     */
+    constructor(appUser) {
+        super(appUser);
+        this.connection_.onmessage = this.onMessage_.bind(this);
+    }
+
+    /**
+     * @param {object} event event triggered by the Websocket connection
+     * @private
+     */
+    onMessage_(event) {
+        let messages = event.data.split('\n');
+
+        for (let i = 0; i < messages.length; i++) {
+            let msg = messages[i];
+
+            if (msg.length <= 1) {
+                continue;
+            }
+
+            if (msg.startsWith('PING :tmi.twitch.tv')) {
+                this.connection_.send('PONG :tmi.twitch.tv');
+            }
+        }
+    }
+}
+
+class ReceiveIRCConnection extends TwitchIRCConnection {
+    /**
+     * @param {AppUser} appUser
+     * @param {MessageParser} messageParser
+     * @param {ChatManager} chatManager
+     * @constructor
+     */
+    constructor(appUser, messageParser, chatManager) {
+        super(appUser);
+        this.messageParser_ = messageParser;
+        this.chatManager_ = chatManager;
+        this.connection_.onmessage = this.onMessage_.bind(this);
+    }
+
+    /**
+     * @param {object} event event triggered by the Websocket connection
+     * @private
+     */
+    onMessage_(event) {
+        let messages = event.data.split('\n');
+
+        for (let i = 0; i < messages.length; i++) {
+            let msg = messages[i];
+            if (msg.startsWith('PING :tmi.twitch.tv')) {
+                this.connection_.send('PONG :tmi.twitch.tv');
+            } else if (msg.length > 1) {
+                let chatMessages = this.messageParser_.parseMessage(msg);
+                this.chatManager_.addMessages(chatMessages);
+            } else {
+                // console.log('Received empty message in ReceiveIRVConnection onMessage_()');
+            }
+        }
+    }
+}
+
+class BadgeManager {
+    /**
+     * @constructor
+     */
+    constructor() {
+        this.badgesChannels_ = {};
+        // noinspection JSUnusedGlobalSymbols
+        this.badgesGlobal_ = null;
+
+        this.downloadGlobalBadges_();
+    }
+
+    /**
+     * @return {Object}
+     */
+    getBadgesChannels() {
+        return this.badgesChannels_;
+    }
+
+    /**
+     * @return {Object}
+     */
+    getBadgesGlobal() {
+        return this.badgesGlobal_;
+    }
+
+    /**
+     * Downloads the JSON information for global badges
+     * @private
+     */
+    downloadGlobalBadges_() {
+        // Download Global Badges JSON
+        $.ajax({
+            context: this,
+            url: (TwitchConstants.GLOBAL_BADGES_API_URL),
+            headers: {
+                'Accept': 'application/vnd.twitchtv.v5+json',
+                'Client-ID': TwitchConstants.CLIENT_ID,
+            },
+            async: true,
+        }).done(function(data) {
+            // noinspection JSUnusedGlobalSymbols
+            this.badgesGlobal_ = data.badge_sets;
+        });
+    }
+
+    /**
+     * @param {string} channelLC
+     * @param {string} channelId
+     */
+    downloadChannelBadges(channelLC, channelId) {
+        // Download Channel Badges
+        $.ajax({
+            context: this,
+            url: ('https://badges.twitch.tv/v1/badges/channels/'
+                + channelId + '/display'),
+            headers: {
+                'Accept': 'application/vnd.twitchtv.v5+json',
+                'Client-ID': TwitchConstants.CLIENT_ID,
+            },
+            async: true,
+        }).done(function(data) {
+            this.badgesChannels_[channelLC] = data.badge_sets;
+        });
+    }
+}
+
+class EmoteManager {
+    /**
+     * @param {AppUser} appUser
+     * @constructor
+     */
+    constructor(appUser) {
+        this.appUser_ = appUser;
+
+        this.userEmotes_ = {};
+
+        this.bttvChannels_ = {};
+        this.bttvGlobal_ = {};
+
+        this.ffzChannels_ = {};
+        this.ffzGlobal_ = {};
+
+        this.downloadGlobalEmotes_();
+    }
+
+    /**
+     * @return {Object}
+     */
+    getUserEmotes() {
+        return this.userEmotes_;
+    }
+    /**
+     * @return {Object}
+     */
+    getBttvGlobal() {
+        return this.bttvGlobal_;
+    }
+    /**
+     * @return {Object}
+     */
+    getFfzGlobal() {
+        return this.ffzGlobal_;
+    }
+    /**
+     * @return {Object}
+     */
+    getBttvChannels() {
+        return this.bttvChannels_;
+    }
+    /**
+     * @return {Object}
+     */
+    getFfzChannels() {
+        return this.ffzChannels_;
+    }
+
+    /**
+     * Downloads the global Twitch, BTTV and FFZ Emote JSONs
+     * @private
+     */
+    downloadGlobalEmotes_() {
+        // Gets a list of the emojis and emoticons that the specified
+        // user can use in chat.
+        $.ajax({
+            context: this,
+            url: ('https://api.twitch.tv/kraken/users/' + this.appUser_.getUserId() + '/emotes'),
+            headers: {
+                'Accept': 'application/vnd.twitchtv.v5+json',
+                'Client-ID': TwitchConstants.CLIENT_ID,
+                'Authorization': ('OAuth ' + localStorage.accessToken),
+            },
+            async: true,
+        }).done(function(data) {
+            this.userEmotes_ = data.emoticon_sets;
+            // console.log(data.emoticon_sets);
+        });
+
+        // Download Global BTTV Emotes JSON
+        $.ajax({
+            context: this,
+            url: ('https://api.betterttv.net/2/emotes'),
+            async: true,
+        }).done(function(data) {
+            this.bttvGlobal_ = data.emotes;
+        });
+
+        // Download Global FFZ Emotes JSON
+        $.ajax({
+            context: this,
+            url: ('https://api.frankerfacez.com/v1/set/global'),
+            async: true,
+        }).done(function(data) {
+            // console.log(data);
+            this.ffzGlobal_ = data;
+        });
+    }
+
+    /**
+     *
+     * @param {string} channelLC
+     */
+    downloadChannelEmotes(channelLC) {
+        this.downloadFfzChannelEmotes_(channelLC);
+        this.downloadBttvChannelEmotes_(channelLC);
+    }
+
+    /**
+     *
+     * @param {string} channelLC
+     * @private
+     */
+    downloadBttvChannelEmotes_(channelLC) {
+        // Download BTTV Channel Emotes
+        $.ajax({
+            context: this,
+            url: ('https://api.betterttv.net/2/channels/' + channelLC),
+            async: true,
+            dataType: 'json',
+            error: function(xhr) {
+                if (xhr.status === 404) {
+                    // Ignore - No BTTV emotes in this channel
+                    console.log('No BTTV Emotes in Channel: ' + channelLC);
+                }
+            },
+        }).done(function(data) {
+            this.bttvChannels_[channelLC] = data.emotes;
+        });
+    }
+
+    /**
+     *
+     * @param {string} channelLC
+     * @private
+     */
+    downloadFfzChannelEmotes_(channelLC) {
+        // Download FFZ Channel Emotes/Moderator Channel Badge
+        $.ajax({
+            context: this,
+            url: ('https://api.frankerfacez.com/v1/room/' + channelLC),
+            async: true,
+            dataType: 'json',
+            error: function(xhr) {
+                if (xhr.status === 404) {
+                    // Ignore - No FFZ emotes in this channel
+                    console.log('No FFZ Emotes in Channel: ' + channelLC);
+                }
+            },
+        }).done(function(data) {
+            this.ffzChannels_[channelLC] = data;
+        });
+    }
+}
+
+class NameColorManager {
+    /**
+     * @constructor
+     */
+    constructor() {
+        this.userColors_ = {};
+    }
+
+    /**
+     * @return {Object.<string, string>}
+     */
+    getUserColors() {
+        return this.userColors_;
+    }
+
+    /**
+     * @param {string} username
+     * @param {string} color hex #xxxxxx
+     */
+    addUserColor(username, color) {
+        this.userColors_[username] = color;
+    }
+
+    /**
+     * Returns a random color of the Twitch standard name colors
+     * @return {string} Random color as hex #xxxxxx
+     */
+    static randomColor() {
+        let colorChoices = [
+            '#ff0000', '#ff4500',
+            '#ff69b4', '#0000ff',
+            '#2e8b57', '#8a2be2',
+            '#008000', '#daa520',
+            '#00ff7f', '#b22222',
+            '#d2691e', '#ff7f50',
+            '#5f9ea0', '#9acd32',
+            '#1e90ff',
+        ];
+        let randomNumber = Math.floor(Math.random() * colorChoices.length);
+        return colorChoices[randomNumber];
+    }
+
+    /**
+     * Does correct the name color for dark backgrounds, so they are better readable
+     * @param {string} hexColor to be corrected as #xxxxxx hex value
+     * @return {string} corrected color as #xxxxxx hex value
+     */
+    static colorCorrection(hexColor) {
+        // Color contrast correction
+        let rgbColor = NameColorManager.hex2rgb_(hexColor);
+        let yiqColor = NameColorManager.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
+        while (hexColor[0] < 0.5) {
+            rgbColor = NameColorManager.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
+            let hslColor = NameColorManager.rgb2hsl_(rgbColor.r, rgbColor.g, rgbColor.b);
+            hslColor.l = Math.min(Math.max(0, 0.1 + 0.9 * hslColor.l), 1);
+            rgbColor = NameColorManager.hsl2rgb_(hslColor.h, hslColor.s, hslColor.l);
+            yiqColor = NameColorManager.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
+        }
+        rgbColor = NameColorManager.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
+        hexColor = NameColorManager.rgb2hex_(rgbColor.r, rgbColor.g, rgbColor.b);
+        return hexColor.substring(0, 7);
+    }
+
+    /**
+     * Converts (r,g,b) to #xxxxxx hex color
+     * @param {number} r red 0-255
+     * @param {number} g green 0-255
+     * @param {number} b blue 0-255
+     * @return {string} color as #xxxxxx hex value
+     * @private
+     */
+    static rgb2hex_(r, g, b) {
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    /**
+     * Converts a #xxxxxx hex color to a rgb color
+     * @param {string} hex color as #xxxxxx hex value
+     * @return {{r: number, g: number, b: number}} r, g, b: 0-255
+     * @private
+     */
+    static hex2rgb_(hex) {
+        let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+        } : null;
+    }
+
+    /**
+     * Converts a rgb color to a yiq color
+     * @param {number} r red 0-255
+     * @param {number} g green 0-255
+     * @param {number} b blue 0-255
+     * @return {{y: number, i: number, q: number}} y, i and q between 0.0 and 1.0
+     * @private
+     */
+    static rgb2yiq_(r, g, b) {
+        // matrix transform
+        let y = ((0.299 * r) + (0.587 * g) + (0.114 * b)) / 255;
+        let i = ((0.596 * r) + (-0.275 * g) + (-0.321 * b)) / 255;
+        let q = ((0.212 * r) + (-0.523 * g) + (0.311 * b)) / 255;
+        return {
+            y: y,
+            i: i,
+            q: q,
+        };
+    }
+
+    /**
+     * Converts a yiq color to a rgb color
+     * @param {number} y luma 0.0-1.0
+     * @param {number} i first chrominance 0.0-1.0
+     * @param {number} q second chrominance 0.0-1.0
+     * @return {{r: number, g: number, b: number}} r, g, b: 0-255
+     * @private
+     */
+    static yiq2rgb_(y, i, q) {
+        // matrix transform
+        let r = (y + (0.956 * i) + (0.621 * q)) * 255;
+        let g = (y + (-0.272 * i) + (-0.647 * q)) * 255;
+        let b = (y + (-1.105 * i) + (1.702 * q)) * 255;
+        // bounds-checking
+        if (r < 0) {
+            r = 0;
+        } else if (r > 255) {
+            r = 255;
+        }
+        if (g < 0) {
+            g = 0;
+        } else if (g > 255) {
+            g = 255;
+        }
+        if (b < 0) {
+            b = 0;
+        } else if (b > 255) {
+            b = 255;
+        }
+        return {
+            r: r,
+            g: g,
+            b: b,
+        };
+    }
+
+    /**
+     * Converts a rgb color to a hsl color
+     * @param {number} r red 0-255
+     * @param {number} g green 0-255
+     * @param {number} b blue 0-255
+     * @return {{h: number, s: number, l: number}} h: 0-360, s: 0.0-1.0, l: 0.0-1.0
+     * @private
+     */
+    static rgb2hsl_(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
+        let max = Math.max(r, g, b);
+        let min = Math.min(r, g, b);
+        let h = (max + min) / 2;
+        let s = (max + min) / 2;
+        let l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+
+            h /= 6;
+        }
+
+        return {
+            h: h*360,
+            s: s,
+            l: l,
+        };
+    }
+
+    /**
+     * Converts an hsl color to a rgb color
+     * @param {number} h hue 0-360
+     * @param {number} s saturation 0.0-1.0
+     * @param {number} l lightness 0.0-1.0
+     * @return {{r: number, g: number, b: number}} r, g, b: 0-255
+     * @private
+     */
+    static hsl2rgb_(h, s, l) {
+        // based on algorithm from http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
+        if ( h === undefined ) {
+            return {
+                r: 0,
+                g: 0,
+                b: 0,
+            };
+        }
+
+        let chroma = (1 - Math.abs((2 * l) - 1)) * s;
+        let huePrime = h / 60;
+        let secondComponent = chroma * (1 - Math.abs((huePrime % 2) - 1));
+
+        huePrime = Math.floor(huePrime);
+        let red;
+        let green;
+        let blue;
+
+        if ( huePrime === 0 ) {
+            red = chroma;
+            green = secondComponent;
+            blue = 0;
+        } else if ( huePrime === 1 ) {
+            red = secondComponent;
+            green = chroma;
+            blue = 0;
+        } else if ( huePrime === 2 ) {
+            red = 0;
+            green = chroma;
+            blue = secondComponent;
+        } else if ( huePrime === 3 ) {
+            red = 0;
+            green = secondComponent;
+            blue = chroma;
+        } else if ( huePrime === 4 ) {
+            red = secondComponent;
+            green = 0;
+            blue = chroma;
+        } else if ( huePrime === 5 ) {
+            red = chroma;
+            green = 0;
+            blue = secondComponent;
+        }
+
+        let lightnessAdjustment = l - (chroma / 2);
+        red += lightnessAdjustment;
+        green += lightnessAdjustment;
+        blue += lightnessAdjustment;
+
+        return {
+            r: Math.round(red * 255),
+            g: Math.round(green * 255),
+            b: Math.round(blue * 255),
+        };
+    }
+}
+
+class FavoritesList {
+    /**
+     * @param {BadgeManager} badgeManager
+     * @param {EmoteManager} emoteManager
+     * @param {ChatManager} chatManager
+     * @constructor
+     */
+    constructor(badgeManager, emoteManager, chatManager) {
+        this.isVisible_ = true;
+        this.badgeManager_ = badgeManager;
+        this.emoteManager_ = emoteManager;
+        this.chatManager_ = chatManager;
+
+        $('#addFavFromInput').click(this.addFavToList.bind(this));
+        $('#newFavInput').keydown(function(event) {
+            if (event.keyCode === 13) {
+                $('#addFavFromInput').click();
+            }
+        });
+        document.getElementById('channelListToggle').addEventListener('click', this.toggleFavList);
+        this.loadFavoritesFromLocalStorage_();
+    }
+
+    /**
+     * @private
+     */
+    loadFavoritesFromLocalStorage_() {
+        try {
+            let channelsArray = JSON.parse(localStorage.getItem('channels'));
+            if (channelsArray !== null) {
+                while (channelsArray.length) {
+                    let channels = channelsArray.splice(0, 98);
+                    this.addFavToList(channels);
+                }
+            } else {
+                let channels = [];
+                localStorage.setItem('channels', JSON.stringify(channels));
+            }
+        } catch (err) {
+            alert('Error: ' + err);
+            let channels = [];
+            localStorage.setItem('channels', JSON.stringify(channels));
+        }
+    }
+
+    /**
+     * If the favorites list is enabled, disable it.
+     * If its disabled, enable it.
+     */
+    toggleFavList() {
+        this.isVisible_ = !this.isVisible_;
+        if (!this.isVisible_) {
+            document.getElementById('fav-channel-list').style.display
+                = 'inline-block';
+            $('.container').css({'width': 'calc(100% - 250px)'});
+            document.getElementById('channelListToggle').style.backgroundImage
+                = 'url(./img/arrow_down.svg)';
+        } else {
+            document.getElementById('fav-channel-list').style.display = 'none';
+            $('.container').css({'width': '100%'});
+            document.getElementById('channelListToggle').style.backgroundImage
+                = 'url(./img/arrow_up.svg)';
+        }
+    }
+
+    /**
+     * Add a channel to the list of favorites
+     *
+     * @param {Array.<string>} channelArray channel name or null
+     */
+    addFavToList(channelArray) {
+        let channels = document.getElementById('newFavInput').value.split(',');
+        if ($.isArray(channelArray)) {
+            channels = channelArray;
+        }
+        let channelsCount = channels.length;
+
+        TwitchApi.getUsers(channels, this, function(data) {
+            data = data.data;
+            let notExistingChannelsCount = channelsCount - data._total;
+            for (let i = 0; i < data.length; i++) {
+                let channel = data[i].display_name;
+                let channelId = data[i].id;
+                let profilePicURL = data[i].profile_image_url;
+                // ToDo: Check if next line is necessary
+                document.getElementById('newFavInput').placeholder = '';
+                // noinspection JSPotentiallyInvalidUsageOfClassThis
+                this.addFavLine_(channel, profilePicURL, channelId);
+            }
+
+            if (notExistingChannelsCount > 0) {
+                // noinspection JSPotentiallyInvalidUsageOfClassThis
+                this.showChannelDoesNotExistInfo_(notExistingChannelsCount);
+            }
+        });
+    }
+
+    /**
+     * @param {number} notExistingChannelsCount
+     * @private
+     */
+    showChannelDoesNotExistInfo_(notExistingChannelsCount) {
+        document.getElementById('newFavInput').value = '';
+        $('#newFavInput').queue(function(next) {
+            let info = (notExistingChannelsCount > 1) ? ' Channels do not exist.' :
+                ' Channel does not exist.';
+            $(this).attr('placeholder', notExistingChannelsCount + info);
+            next();
+        }).delay(5000).queue(function(next) {
+            $(this).attr('placeholder', '');
+            next();
+        });
+    }
+
+    /**
+     * @param {string} channel channel name
+     * @param {string} profilePicURL URL to profile image file
+     * @param {string} channelId channel id
+     */
+    addFavLine_(channel, profilePicURL, channelId) {
+        let channelLC = channel.toLowerCase();
+
+        this.badgeManager_.downloadChannelBadges(channelLC, channelId);
+        this.emoteManager_.downloadChannelEmotes(channelLC);
+
+
+        if (channel.length > 0
+            && $('.favEntry[id$=\'' + channelLC + '\']').length === 0) {
+            document.getElementById('newFavInput').value = '';
+
+            let favList = $('#fav-channel-list');
+
+            favList.append('<div class="favEntry" id="' + channelLC
+                + '"><img class="profilePic" src="' + ((profilePicURL != null)
+                    ? profilePicURL : '/img/defaultProfile.png')
+                + '" /><input class="favEntryAddChatButton" ' +
+                'id="' + channelLC + '" type="button" value="' + channel
+                + '"><input class="favEntryRemoveButton" ' +
+                'id="' + channelLC + '" type="button" ></div>');
+
+            $(document).on('click', '.favEntryAddChatButton[id$=\''
+                + channelLC + '\']', this, function(event) {
+                event.data.chatManager_.addChat(channel);
+            });
+
+            $(document).on('click', '.favEntryRemoveButton[id$=\'' + channelLC + '\']', this,
+                function(event) {
+                    $(this).parent().remove();
+                    event.data.removeChannelFromLocalStorage_(channelLC);
+            });
+
+            // ToDo: is it needed to do channelList.sortable() every time when an entry is added?
+            favList.sortable({
+                axis: 'y',
+                animation: 300,
+                cursor: 'move',
+                revert: 200,
+                scroll: true,
+                containment: 'parent',
+            });
+        }
+
+        this.storeChannelInLocalStorage_(channelLC);
+    }
+
+    // noinspection JSMethodCanBeStatic
+    /**
+     * @param {string} channelName Twitch channel id of the channel that is stored
+     * @private
+     */
+    storeChannelInLocalStorage_(channelName) {
+        let channels = JSON.parse(localStorage.getItem('channels'));
+        let index = channels.indexOf(channelName);
+        if (index > -1) {
+            channels.splice(index, 1);
+        }
+        channels.push(channelName);
+        localStorage.setItem('channels', JSON.stringify(channels));
+    }
+
+    // noinspection JSMethodCanBeStatic
+    /**
+     * @param {string} channelLC Twitch channel id of the channel that gets deleted
+     * @private
+     */
+    removeChannelFromLocalStorage_(channelLC) {
+        let channels = JSON.parse(localStorage.getItem('channels'));
+        let index = channels.indexOf(channelLC);
+        if (index > -1) {
+            channels.splice(index, 1);
+        }
+        localStorage.setItem('channels', JSON.stringify(channels));
+    }
+}
+
+class ChatMessage {
+    /**
+     * @param {string} chatName Name of the chat the message is for
+     * @param {string} content The actual content of the message
+     * @constructor
+     */
+    constructor(chatName, content) {
+        this.chatName_ = chatName;
+        /** @private */
+        this.timestamp_ = this.getCurrentTimeFormatted_();
+        /** @private */
+        this.content_ = content.trim();
+        /** @private */
+    }
+
+    /**
+     * @return {string}
+     */
+    getContent() {
+        return this.content_;
+    }
+    /**
+     * @return {string}
+     */
+    getTimestamp() {
+        return this.timestamp_;
+    }
+    /**
+     * @return {string}
+     */
+    getChatName() {
+        return this.chatName_;
+    }
+
+    // noinspection JSMethodCanBeStatic
+    /**
+     * Returns the current time in 24h format
+     * @return {string} time in format HH:MM
+     * @private
+     */
+    getCurrentTimeFormatted_() {
+        let currentDate = new Date();
+        let time;
+        if (currentDate.getHours() >= 10 && currentDate.getMinutes() >= 10) {
+            time = currentDate.getHours() + ':' + currentDate.getMinutes();
+        } else if (currentDate.getHours() < 10 && currentDate.getMinutes() >= 10) {
+            time = '0' + currentDate.getHours() + ':' + currentDate.getMinutes();
+        } else if (currentDate.getHours() >= 10 && currentDate.getMinutes() < 10) {
+            time = currentDate.getHours() + ':0' + currentDate.getMinutes();
+        } else {
+            time = '0' + currentDate.getHours() + ':0' + currentDate.getMinutes();
+        }
+        return time;
+    }
+    /**
+     * @return {string} HTML Code
+     */
+    getHtml() {
+        return '<li style="border-top: 1px solid #673ab7;' +
+            'border-bottom: 1px solid #673ab7;padding-top: 3px; ' +
+            'padding-bottom: 3px;"><span style="color: gray;' +
+            'font-size: 11px;">' + this.timestamp_ + '</span>  ' +
+            this.content_
+            + '</li>';
+    }
+}
+
+class RoomstateMessage extends ChatMessage {
+    /**
+     * @param {string} chatName Name of the chat the message is for
+     * @param {string} content The actual content of the message
+     * @constructor
+     */
+    constructor(chatName, content) {
+        super(chatName, content);
+    }
+
+    /**
+     * @return {string} HTML Code
+     */
+    getHtml() {
+        return '<p style="color: gray; font-size: 11px;' +
+            'padding-left: 10px;font-weight: 200;">' + this.getContent() + '</p>';
+    }
+}
+
+/**
+ * Represents one chat column on the app
+ */
+class Chat {
+    /**
+     * Adds the chat column for channelName to the app
+     *
+     * @param {string} channelName Name of the channel
+     * @param {EmoteManager} emoteManager
+     * @param {ReceiveIRCConnection} receiveIrcConnection
+     * @param {SendIRCConnection} sendIrcConnection
+     */
+    constructor(channelName, emoteManager, receiveIrcConnection, sendIrcConnection) {
+        /** @private */
+        this.channelName_ = channelName;
+        /** @private */
+        this.channelNameLC_ = channelName.toLowerCase();
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.receiveIrcConnection_ = receiveIrcConnection;
+        /** @private */
+        this.sendIrcConnection_ = sendIrcConnection;
+        /** @private */
+        this.messageCount_ = 0;
+        /** @private */
+        this.containerCount_ = 0;
+        /** @private
+         *  @const */
+        this.MESSAGE_LIMIT_ = 200000;
+        /** @private
+         *  @const */
+        this.MESSAGES_IN_CONTAINER_ = 100;
+    }
+
+    /**
+     * @param {Object.<ChatMessage>} chatMessage
+     */
+    addMessage(chatMessage) {
+        if (chatMessage instanceof RoomstateMessage) {
+            let chatInput = $('.chatInput#' + chatMessage.getChatName().toLowerCase());
+            chatInput.append(chatMessage.getHtml());
+        } else {
+            let chatMessageList = $('#' + this.channelName_.toLowerCase() + 'contentArea');
+
+            if (chatMessageList.children('div').length === 0 ||
+                (chatMessageList.children('div').length !== 0 &&
+                    chatMessageList.children('div:last')
+                        .children('li').length >= this.MESSAGES_IN_CONTAINER_)) {
+                chatMessageList.append('<div></div>');
+                this.containerCount_++;
+            }
+            chatMessageList.children('div:last').append(chatMessage.getHtml());
+            this.messageCount_++;
+            this.limitMessages_();
+            this.hideNotVisibleMessages();
+            this.correctScrollPosition_();
+        }
+    }
+
+    /**
+     * Checks whether there are more than this.MESSAGE_LIMIT_ messages in chat.
+     * If yes than remove the first div with messages
+     * @private
+     */
+    limitMessages_() {
+        if (this.messageCount_ >= this.MESSAGE_LIMIT_) {
+            $('#' + this.channelName_ + ' .chatContent .chatMessageList div:first').remove();
+            // noinspection JSUnusedGlobalSymbols
+            this.messageCount_ -= this.MESSAGES_IN_CONTAINER_;
+            this.containerCount_--;
+        }
+    }
+
+    /**
+     * When chat is scrolled to bottom, this hides all message containers except the last 3
+     */
+    hideNotVisibleMessages() {
+        // Hide all divs with 100 messages each which are not the last 3 to improve performance
+        if (this.containerCount_ > 3 && this.isScrolledToBottom()) {
+            let chatMessageList = $('#' + this.channelName_ + 'contentArea');
+            chatMessageList.children('div:visible').slice(0, -3).hide();
+        }
+    }
+
+    /**
+     * Checks if the Chat is scrolled to the bottom
+     * @return {boolean} True if on bottom, false if not
+     */
+    isScrolledToBottom() {
+        let bottom = false;
+        let chatContent = $('#' + this.channelNameLC_ + 'scrollArea');
+        if (chatContent[0].scrollHeight - chatContent.scrollTop()
+            < chatContent.outerHeight() + 50) bottom = true;
+        return bottom;
+    }
+
+    /**
+     * @private
+     */
+    correctScrollPosition_() {
+        // Scroll to bottom
+        let bottom = this.isScrolledToBottom();
+        let chatContent = $('#' + this.channelNameLC_ + 'scrollArea');
+        if (bottom) {
+            let contentHeight = chatContent[0].scrollHeight;
+            chatContent.scrollTop(contentHeight + 50);
+            // chatContent.stop(true, false).delay(50)
+            // .animate({ scrollTop: contentHeight }, 2000, 'linear');
+            $('#' + this.channelNameLC_ + ' .chatContent .chatMessageList')
+                .find('p:last').imagesLoaded(function() {
+                setTimeout(function() {
+                    contentHeight = chatContent[0].scrollHeight;
+                    chatContent.scrollTop(contentHeight + 50);
+                    // chatContent.stop(true, false).delay(50)
+                    // .animate({ scrollTop: contentHeight }, 2000, 'linear');
+                    // alert("wub");
+                }, 50);
+            });
+        } else if (!bottom
+            && $('#' + this.channelNameLC_ + ' .chatNewMessagesInfo').is(':hidden')) {
+            let contentHeight = chatContent[0].scrollHeight;
+            chatContent.scrollTop(contentHeight + 50);
+            // chatContent.stop(true, false).delay(50)
+            // .animate({ scrollTop: contentHeight }, 2000, 'linear');
+        }
+    }
+
+    /**
+     * @return {string} HTML Code for the chat
+     */
+    getHtml() {
+        let channelLC = this.channelName_.toLowerCase();
+        return '<div class="chat" id="' + channelLC + '">' +
+            '<div class="chatHeader" id="' + channelLC + '">' +
+            '<button class="toggleViewerlist" id="' + channelLC + '"></button>' +
+            '<span>' + this.channelName_ + '</span>' +
+            '<button class="removeChat" id="' + channelLC + '"></button>' +
+            '<button class="toggleStream" id="' + channelLC + '"></button>' +
+            '</div>' +
+            '<div class="chatContent" id="' + channelLC + 'scrollArea">' +
+            '<div class="chatMessageList" id="' + channelLC + 'contentArea">' +
+            '</div></div>' +
+            '<div class="chatInput" id="' + channelLC + '">' +
+            '<div class="chatNewMessagesInfo" id="' + channelLC + '">' +
+            'More messages below.</div>' +
+            '<img class="kappa" src="/img/Kappa.png" />' +
+            '<textarea maxlength="500" class="chatInputField" id="'
+            + channelLC +
+            '" placeholder="Send a message..."></textarea>' +
+            '<div class="emoteMenu">' +
+            '<div class="emotes">' +
+            '<div class="bttvEmotes" style="width: 100%;">' +
+            '<h3>BTTV Emotes</h3></div>' +
+            '<div class="bttvChannelEmotes" style="width: 100%;">' +
+            '<h3>BTTV Channel Emotes</h3></div>' +
+            '<div class="ffzEmotes" style="width: 100%;">' +
+            '<h3>FFZ Emotes</h3></div>' +
+            '<div class="ffzChannelEmotes" style="width: 100%;">' +
+            '<h3>FFZ Channel Emotes</h3></div>' +
+            '</div></div></div>'
+            + '<div class="chatViewerlist" id="' + channelLC + '"></div>';
+    }
+
+    /**
+     * Adds all abilities to the Chat (Button actions etc.)
+     */
+    addAbilities() {
+        this.addEmotesToEmoteMenu_();
+        this.addEmoteMenuImgClickAbility_();
+        this.addEmoteMenuGroupClickAbility_();
+        this.addEmoteMenuToggleAbility_();
+        this.addEmoteMenuDraggableAbility_();
+        this.addEmoteMenuResizableAbility_();
+        this.addStreamIframeAbility_();
+        this.addResizeAbility_();
+        this.addChatterListAbility_();
+        this.addSendMessagesAbility_();
+        this.addNewMessageInfoAbility_();
+    }
+    /**
+     * @private
+     */
+    addEmotesToEmoteMenu_() {
+        let channelLC = this.channelName_.toLowerCase();
+        let userEmotes = this.emoteManager_.getUserEmotes();
+        // Twitch Global/Channel
+        for (let j in userEmotes) {
+            if ({}.hasOwnProperty.call(userEmotes, j)) {
+                let emoteSet = userEmotes[j];
+                $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .emotes')
+                    .prepend('<div class="' + j + '" style="width: 100%;">' +
+                        '<h3>' + j + '</h3></div>');
+                for (let k in emoteSet) {
+                    if ({}.hasOwnProperty.call(emoteSet, k)) {
+                        $('.chatInput[id$=\'' + channelLC
+                            + '\'] .emoteMenu .emotes .' + j)
+                            .append('<img ' +
+                                'src=\'https://static-cdn.jtvnw.net/emoticons/v1/'
+                                + emoteSet[k].id + '/1.0\' alt=\''
+                                + emoteSet[k].code + '\' />');
+                    }
+                }
+            }
+        }
+        // BTTV Global
+        let bttvGlobal = this.emoteManager_.getBttvGlobal();
+        for (let i = 0; i < bttvGlobal.length; i++) {
+            if (bttvGlobal[i].channel == null) {
+                $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .bttvEmotes')
+                    .append('<img src="https://cdn.betterttv.net/emote/'
+                        + bttvGlobal[i].id + '/1x" alt="' + bttvGlobal[i].code
+                        + '" />');
+            }
+        }
+        // FFZ Global
+        let ffzGlobal = this.emoteManager_.getFfzGlobal();
+        for (let j = 0; j < ffzGlobal.default_sets.length; j++) {
+            let emoteSetGlobal = ffzGlobal.default_sets[j];
+            let emotesInSetGlobal = ffzGlobal['sets'][emoteSetGlobal]['emoticons'];
+            for (let k = 0; k < emotesInSetGlobal.length; k++) {
+                // let ffzEmoteName = JSON.stringify(emotesInSetGlobal[k].name);
+
+                $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .ffzEmotes')
+                    .append('<img src=\'https:' +
+                        emotesInSetGlobal[k]['urls']['1'] + '\' ' +
+                        'alt=\'' + emotesInSetGlobal[k].name + '\' />');
+            }
+        }
+        // BTTV Channel
+        let bttvChannels = this.emoteManager_.getBttvChannels();
+        if (bttvChannels.hasOwnProperty(channelLC)) {
+            for (let j = 0; j < bttvChannels[channelLC].length; j++) {
+                /* let bttvChannelEmote =
+                    JSON.stringify(bttvChannels[channelLC][j].code);*/
+
+                let emoteId = JSON.stringify(bttvChannels[channelLC][j].id)
+                    .substring(1,
+                        JSON.stringify(bttvChannels[channelLC][j].id).length - 1);
+                $('.chatInput[id$=\'' + channelLC
+                    + '\'] .emoteMenu .bttvChannelEmotes')
+                    .append('<img src=\'https://cdn.betterttv.net/emote/' +
+                        emoteId +
+                        '/1x\' alt=\'' + bttvChannels[channelLC][j].code + '\' />');
+            }
+        }
+        // FFZ Channel
+        let ffzChannels = this.emoteManager_.getFfzChannels();
+        if (ffzChannels.hasOwnProperty(channelLC)) {
+            let ffzChannelId = ffzChannels[channelLC]['room']['_id'];
+            if (ffzChannels[channelLC]['sets'][ffzChannelId] != null) {
+                let ffzChannelEmoteSet =
+                    ffzChannels[channelLC]['sets'][ffzChannelId]['emoticons'];
+                for (let j = 0; j < ffzChannelEmoteSet.length; j++) {
+                    /* let ffzChannelEmote =
+                        JSON.stringify(ffzChannelEmoteSet[j].name);*/
+
+                    $('.chatInput[id$=\'' + channelLC
+                        + '\'] .emoteMenu .ffzChannelEmotes')
+                        .append('<img src=\'https:' +
+                            ffzChannelEmoteSet[j]['urls']['1'] + '\' ' +
+                            'alt=\'' + ffzChannelEmoteSet[j].name + '\' />');
+                }
+            }
+        }
+    }
+    /**
+     * @private
+     */
+    addEmoteMenuImgClickAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu img').click(function() {
+            let emoteName = $(this).attr('alt');
+            let inputField = $('.chatInputField[id$=\'' + channelLC + '\']');
+            let curValue = inputField.val();
+            let newValue;
+            if (!curValue.endsWith(' ') && curValue.length > 0) {
+                newValue = curValue + ' ' + emoteName + ' ';
+            } else {
+                newValue = curValue + emoteName + ' ';
+            }
+            inputField.val(newValue);
+        });
+    }
+
+    /**
+     * @private
+     */
+    addEmoteMenuGroupClickAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .emotes h3')
+            .click(/* @this HTMLElement */function() {
+                if ($(this).parent().css('height') === '18px') {
+                    $(this).parent().css({'height': ''});
+                } else {
+                    $(this).parent().css({'height': '18px'});
+                }
+            });
+    }
+
+    /**
+     * @private
+     */
+    addEmoteMenuToggleAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
+        $('.chatInput[id$=\'' + channelLC + '\'] .kappa').click(function() {
+            if ($emoteMenu.is(':hidden')) {
+                $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu').show();
+            } else {
+                $emoteMenu.hide();
+                $emoteMenu.css({
+                    'top': '',
+                    'left': '',
+                    'right': '',
+                    'bottom': '',
+                });
+            }
+        });
+    }
+
+    /**
+     * @private
+     */
+    addEmoteMenuDraggableAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
+        let chatArea = $('#main-chat-area');
+        $emoteMenu.draggable({
+            containment: chatArea,
+        });
+    }
+    /**
+     * @private
+     */
+    addEmoteMenuResizableAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
+        $emoteMenu.resizable({
+            handles: 'n, ne, e',
+            minHeight: 200,
+            minWidth: 200,
+        });
+    }
+    /**
+     * @private
+     */
+    addStreamIframeAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $(document).on('click', '.toggleStream[id$=\'' + channelLC + '\']',
+            /* @this HTMLElement */function() {
+                if ($(this).parent().parent().find('.chatStream').length) {
+                    $(this).parent().parent().find('.chatStream').remove();
+                    $(this).parent().parent().find('.chatContent')
+                        .css({'height': 'calc(100% - 105px)'});
+                    $(this).parent().parent().find('.chatViewerlist')
+                        .css({'height': 'calc(100% - 35px)'});
+                } else {
+                    $(this).parent().parent().prepend(
+                        '<div class="chatStream" id="' + channelLC + '">' +
+                        '<div class="chatStreamInner">' +
+                        '<iframe src="https://player.twitch.tv/?channel=' + channelLC
+                        + '" frameborder="0" allowfullscreen="true"' +
+                        ' scrolling="no" height="100%" width="100%"></iframe>' +
+                        '</div></div>');
+                    $(this).parent().parent().find('.chatContent')
+                        .css({
+                            'height': 'calc(100% - 105px - ' +
+                            $(this).parent().parent()
+                                .find('.chatStream').outerHeight() + 'px )',
+                        });
+                    $(this).parent().parent().find('.chatViewerlist')
+                        .css({
+                            'height': 'calc(100% - 35px - ' +
+                            $(this).parent().parent()
+                                .find('.chatStream').outerHeight() + 'px )',
+                        });
+                }
+            });
+    }
+    /**
+     * @private
+     */
+    addResizeAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $(document).on('resize', '.chat[id$=\'' + channelLC + '\']', function() {
+            $(this).find('.chatContent')
+                .css({
+                    'height': 'calc(100% - 105px - ' + $(this)
+                        .find('.chatStream').outerHeight() + 'px )',
+                });
+            $(this).find('.chatViewerlist')
+                .css({
+                    'height': 'calc(100% - 35px - ' + $(this)
+                        .find('.chatStream').outerHeight() + 'px )',
+                });
+        });
+        $('.chat[id$=\'' + channelLC + '\']').resizable({
+            handles: 'e',
+            start: function() {
+                $('iframe').css('pointer-events', 'none');
+            },
+            stop: function() {
+                $('iframe').css('pointer-events', 'auto');
+            },
+        });
+        let contentHeightOld =
+            $('.chatContent[id$=\'' + channelLC + 'scrollArea\'] .chatMessageList').height();
+        $('.chat[id$=\'' + channelLC).resize(function() {
+            let $newMessagesInfo = $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']');
+            let $chatContent = $('#' + channelLC + ' .chatContent');
+            let $chatContentArea = $('.chatContent[id$=\'' + channelLC + 'contentArea\']');
+            if ($newMessagesInfo.is(':hidden') && contentHeightOld <= $chatContentArea.height()) {
+                $chatContent.scrollTop($chatContent[0].scrollHeight + 50);
+                contentHeightOld = $chatContentArea.height();
+            }
+            if ($newMessagesInfo.is(':hidden')) {
+                $chatContent.scrollTop($chatContent[0].scrollHeight + 50);
+            }
+        });
+    }
+    /**
+     * @private
+     */
+    addChatterListAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        let toggleVL = 0;
+        $(document).on('click', '.toggleViewerlist[id$=\'' + channelLC + '\']', function() {
+            // if ($(this).parent().parent().find("div.chatViewerlist")
+            // .css("display").toLowerCase() != "none") {
+            if (toggleVL % 2 !== 0) {
+                $(this).parent().parent().find('div.chatViewerlist').hide();
+                $(this).parent().parent().find('div.chatContent').show();
+                $(this).parent().parent().find('div.chatInput').show();
+            } else {
+                $(this).parent().parent().find('div.chatContent').hide();
+                $(this).parent().parent().find('div.chatInput').hide();
+                $(this).parent().parent().find('div.chatViewerlist').show();
+
+                let viewerlist =
+                    $(this).parent().parent().find('div.chatViewerlist');
+
+                TwitchApi.getChatterList(channelLC, this, function(data) {
+                    viewerlist.empty();
+                    data = data.data;
+                    viewerlist.append('Chatter Count: ' + data.chatter_count +
+                        '<br /><br />');
+
+                    let chatters = data.chatters;
+                    if (chatters.moderators.length > 0) {
+                        viewerlist.append('<h3>Moderators</h3>');
+                        let modList = '<ul>';
+                        for (let i = 0; i < chatters.moderators.length; i++) {
+                            modList += '<li>' + chatters.moderators[i] + '</li>';
+                        }
+                        modList += '</ul><br />';
+                        viewerlist.append(modList);
+                    }
+                    if (chatters.staff.length > 0) {
+                        viewerlist.append('<h3>Staff</h3>');
+                        let staffList = '<ul>';
+                        for (let i = 0; i < chatters.staff.length; i++) {
+                            staffList += '<li>' + chatters.staff[i] + '</li>';
+                        }
+                        staffList += '</ul><br />';
+                        viewerlist.append(staffList);
+                    }
+                    if (chatters.admins.length > 0) {
+                        viewerlist.append('<h3>Admins</h3>');
+                        let adminsList = '<ul>';
+                        for (let i = 0; i < chatters.admins.length; i++) {
+                            adminsList += '<li>' + chatters.admins[i] + '</li>';
+                        }
+                        adminsList += '</ul><br />';
+                        viewerlist.append(adminsList);
+                    }
+                    if (chatters.global_mods.length > 0) {
+                        viewerlist.append('<h3>Global Mods</h3>');
+                        let globalModsList = '<ul>';
+                        for (let i = 0; i < chatters.global_mods.length; i++) {
+                            globalModsList +=
+                                '<li>' + chatters.global_mods[i] + '</li>';
+                        }
+                        globalModsList += '</ul><br />';
+                        viewerlist.append(globalModsList);
+                    }
+                    if (chatters.viewers.length > 0) {
+                        viewerlist.append('<h3>Viewers</h3>');
+                        let viewersList = '<ul>';
+                        for (let i = 0; i < chatters.viewers.length; i++) {
+                            viewersList += '<li>' + chatters.viewers[i] + '</li>';
+                        }
+                        viewersList += '</ul><br />';
+                        viewerlist.append(viewersList);
+                    }
+                });
+            }
+            toggleVL++;
+        });
+    }
+    /**
+     * @private
+     */
+    addSendMessagesAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $('.chatInputField[id$=\'' + channelLC + '\']').keydown(this, function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                if ($(this).val().startsWith('.')
+                    || $(this).val().startsWith('/')) {
+                    event.data.receiveIrcConnection_.send('PRIVMSG #' + channelLC + ' :'
+                        + $(this).val());
+                } else {
+                    event.data.sendIrcConnection_.send('PRIVMSG #' + channelLC
+                        + ' :' + $(this).val());
+                }
+                $(this).val('');
+            } else if (event.keyCode === 9) {
+                event.preventDefault();
+                if ($(this).val().length !== 0 && !$(this).val().endsWith(' ')) {
+                    console.log('WUB');
+                }
+            }
+        });
+    }
+    /**
+     * @private
+     */
+    addNewMessageInfoAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
+        $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').click(function() {
+            $(this).hide();
+            let $chatContent = $('#' + channelLC + ' .chatContent');
+            $chatContent.scrollTop($chatContent[0].scrollHeight);
+        });
+        $('.chatContent[id$=\'' + channelLC + 'scrollArea\']').scroll(
+            /* @this HTMLElement */function() {
+                // Bug workaround: unexpected horizontal scrolling
+                // despite overflow-x: hidden
+                if ($(this).scrollLeft() !== 0) {
+                    $(this).scrollLeft(0);
+                }
+                // New messages info scroll behavior
+                if ($(this)[0].scrollHeight - $(this).scrollTop()
+                    < $(this).outerHeight() + 50) {
+                    $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').hide();
+                } else {
+                    $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').show();
+                }
+
+                if ($(this).scrollTop() < 200) {
+                    $('.chatContent[id$=\'' + channelLC
+                        + 'scrollArea\'] .chatMessageList')
+                        .children('div:hidden:last').show();
+                }
+            });
+    }
+}
+
+class ChatManager {
+    /**
+     * Creates the ChatManager
+     * @param {EmoteManager} emoteManager
+     */
+    constructor(emoteManager) {
+        /**
+         * @private
+         * @type {Object.<string, Chat>}
+         */
+        this.chatList_ = {};
+        this.emoteManager_ = emoteManager;
+
+        // Bug workaround: unexpected vertical scrolling
+        // despite overflow-y: hidden
+        $('#main-chat-area').scroll(function() {
+            if ($(this).scrollTop() !== 0) {
+                $(this).scrollTop(0);
+            }
+        });
+    }
+
+    setReceiveIrcConnection(receiveIrcConnection) {
+        this.receiveIrcConnection_= receiveIrcConnection;
+    }
+    setSendIrcConnection(sendIrcConnection) {
+        this.sendIrcConnection_ = sendIrcConnection;
+    }
+
+    /**
+     * Adds the chat messages to the correct chat
+     * @param {Array.<ChatMessage>} chatMessages
+     */
+    addMessages(chatMessages) {
+        for (let i = 0; i < chatMessages.length; i++) {
+            let chatName = chatMessages[i].getChatName().toLowerCase();
+            this.chatList_[chatName].addMessage(chatMessages[i]);
+        }
+    }
+
+    /**
+     * @param {string} channelName
+     * @return {boolean} true if chat already in the chatList
+     */
+    isChatAlreadyAdded(channelName) {
+        return this.chatList_.hasOwnProperty(channelName);
+    }
+
+    /**
+     * Removes the Chat from the chatList_ and the DOM
+     *
+     * @param {Object} event
+     * @private
+     */
+    removeChat_(event) {
+        let channelName = event.data[1].toLowerCase();
+        let thiss = event.data[0];
+        delete thiss.chatList_[channelName];
+        $(document).off('click', '.toggleStream[id$=\'' + channelName + '\']');
+        $(this).parent().parent().remove();
+        thiss.receiveIrcConnection_.leaveChat(channelName);
+        thiss.sendIrcConnection_.leaveChat(channelName);
+    }
+
+    /**
+     * Creates new Chat and adds it to the chatList_ if there is not already
+     * a chat with this channelName
+     * @param {string} channelName Name of the channel that will be added
+     */
+    addChat(channelName) { // ToDo: Restructure this method
+        let channelLC = channelName.toLowerCase();
+        if (!this.isChatAlreadyAdded(channelLC)) {
+            this.chatList_[channelLC] = new Chat(channelName, this.emoteManager_,
+                this.receiveIrcConnection_, this.sendIrcConnection_);
+            let chatArea = $('#main-chat-area');
+            chatArea.append(this.chatList_[channelLC].getHtml());
+            this.chatList_[channelLC].addAbilities();
+
+            this.receiveIrcConnection_.joinChat(channelLC);
+            this.sendIrcConnection_.joinChat(channelLC);
+
+            $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
+                [this, channelName], this.removeChat_);
+
+            // ToDO: Check if .sortable is needed every time
+            chatArea.sortable({
+                handle: '.chatHeader',
+                start(event, ui) {
+                    ui.placeholder.width(ui.item.width());
+                    ui.placeholder.height(ui.item.height());
+                },
+                animation: 300,
+                cursor: 'move',
+                revert: 200,
+                scroll: true,
+                containment: 'parent',
+            });
+        }
+    }
+}
+
+class UserMessage extends ChatMessage {
+    /**
+     * @param {string} chatName Name of the chat the message is for
+     * @param {string} content The actual content of the message
+     * @param {array} badges List of badges shown in front of the name
+     * @param {Array.<string>} emotePositions
+     * @param {string} chatterName Name of the chatter the message is from
+     * @param {string} chatterColor The color of the chatters name in hex #xxxxxx
+     * @param {boolean} action
+     * @param {EmoteManager} emoteManager
+     * @param {BadgeManager} badgeManager
+     * @constructor
+     */
+    constructor(chatName, content, badges, emotePositions, chatterName, chatterColor, action,
+                emoteManager, badgeManager) {
+        super(chatName, content);
+        /** @private */
+        this.badges_ = badges;
+        /** @private */
+        this.emotes_ = emotePositions;
+        /** @private */
+        this.chatterName_ = chatterName;
+        /** @private */
+        this.chatterColor_ = chatterColor;
+        /** @private */
+        this.action_ = action;
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.badgeManager_ = badgeManager;
+    }
+
+    /**
+     * @return {string} HTML code
+     */
+    getHtml() {
+        let html = this.replaceTwitchEmotesAndEscapeHtml(this.getContent());
+        html = UserMessage.matchURL_(html);
+        html = this.replaceBttvEmotes(html);
+        html = this.replaceFfzEmotes(html);
+        html = this.replaceBadges(html);
+        return html;
+    }
+
+    /**
+     * Replace Twitch emote texts with img html tag
+     * and simultaneously escape the HTML chars in the msg
+     * @param {string} userMessage
+     * @return {string}
+     */
+    replaceTwitchEmotesAndEscapeHtml(userMessage) {
+        // Replace emote texts with images
+        if (this.emotes_[0] !== '' && this.emotes_[0] != null) {
+            let sortEmotes = [];
+            for (let j = 0; j < this.emotes_.length; j++) {
+                let emote = this.emotes_[j].split(':');
+                let emoteId = emote[0];
+                let positions = emote[1].split(',');
+
+                for (let k = 0; k < positions.length; k++) {
+                    sortEmotes.push(
+                        [positions[k].split('-')[0],
+                            positions[k].split('-')[1], emoteId]);
+                }
+            }
+            for (let k = 0; k < sortEmotes.length - 1; k++) {
+                for (let l = k + 1; l < sortEmotes.length; l++) {
+                    if (parseInt(sortEmotes[k][0])
+                        > parseInt(sortEmotes[l][0])) {
+                        let zs = sortEmotes[k];
+                        sortEmotes[k] = sortEmotes[l];
+                        sortEmotes[l] = zs;
+                    }
+                }
+            }
+
+            let diff = 0;
+            let oldAfterEmotePos = 0;
+            for (let k = 0; k < sortEmotes.length; k++) {
+                let oldMessage = userMessage;
+
+                let imgString = userMessage.substring(0, oldAfterEmotePos)
+                    + UserMessage.escapeString_(userMessage.substring(oldAfterEmotePos,
+                        parseInt(sortEmotes[k][0]) + diff)) +
+                    '<span style=" display: inline-block;" >&#x200b;' +
+                    '<img src=\'https://static-cdn.jtvnw.net/emoticons/v1/'
+                    + sortEmotes[k][2] + '/1.0\' /></span>';
+
+                userMessage = imgString +
+                    userMessage.substring(parseInt(sortEmotes[k][1])
+                        + 1 + diff, userMessage.length);
+                oldAfterEmotePos = imgString.length;
+                // alert(oldAfterEmotePos);
+                // alert(userMessage);
+                diff += userMessage.length - oldMessage.length;
+            }
+        } else {
+            userMessage = UserMessage.escapeString_(userMessage);
+        }
+        return userMessage;
+    }
+
+    /**
+     * Replaces Bttv emote texts with img html tag
+     * @param {string} userMessage
+     * @return {string}
+     */
+    replaceBttvEmotes(userMessage) {
+        // Replace BTTV Global Emotes with img
+        let bttvGlobal = this.emoteManager_.getBttvGlobal();
+        for (let j = 0; j < bttvGlobal.length; j++) {
+            if (bttvGlobal[j].channel == null) {
+                let find = JSON.stringify(bttvGlobal[j].code);
+                find = find.substring(1, find.length - 1);
+                find = '(^|\\b|\\s)' +
+                    find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&') + '(?=\\s|$)';
+
+                let re = new RegExp(find, 'g');
+
+                let emoteId = JSON.stringify(bttvGlobal[j].id)
+                    .substring(1, JSON.stringify(bttvGlobal[j].id).length - 1);
+                userMessage = userMessage.replace(re,
+                    ' <span style=" display: inline-block;" >&#x200b;' +
+                    '<img src=\'https://cdn.betterttv.net/emote/' + emoteId +
+                    '/1x\' alt=\'' + bttvGlobal[j].code + '\' /></span> ');
+            }
+        }
+        // Replace BTTV Channel Emotes with img
+        let bttvChannels = this.emoteManager_.getBttvChannels();
+        if (bttvChannels.hasOwnProperty(this.chatName_)) {
+            for (let j = 0; j < bttvChannels[this.chatName_].length; j++) {
+                let find = JSON.stringify(bttvChannels[this.chatName_][j].code);
+                find = find.substring(1, find.length - 1);
+                find = '(^|\\b|\\s)' + find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&') + '(?=\\s|$)';
+
+                let re = new RegExp(find, 'g');
+
+                let emoteId =
+                    JSON.stringify(bttvChannels[this.chatName_][j].id)
+                    .substring(1,
+                        JSON.stringify(
+                            bttvChannels[this.chatName_][j].id).length - 1);
+                userMessage = userMessage.replace(re,
+                    ' <span style=" display: inline-block;" >&#x200b;' +
+                    '<img src=\'https://cdn.betterttv.net/emote/' +
+                    emoteId +
+                    '/1x\' alt=\'' +
+                    bttvChannels[this.chatName_][j].code + '\' />' +
+                    '</span> ');
+            }
+        }
+        return userMessage;
+    }
+    /**
+     * Replaces Ffz emote texts with img html tag
+     * @param {string} userMessage
+     * @return {string}
+     */
+    replaceFfzEmotes(userMessage) {
+        // Replace FFZ Global Emotes with img
+        let ffzGlobal = this.emoteManager_.getFfzGlobal();
+        for (let j = 0; j < ffzGlobal.default_sets.length; j++) {
+            let emoteSetGlobal = ffzGlobal.default_sets[j];
+            let emotesInSetGlobal =
+                ffzGlobal['sets'][emoteSetGlobal]['emoticons'];
+            for (let k = 0; k < emotesInSetGlobal.length; k++) {
+                let find = JSON.stringify(emotesInSetGlobal[k].name);
+                find = find.substring(1, find.length - 1);
+                find = '(^|\\b|\\s)'
+                    + find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&')
+                    + '(?=\\s|$)';
+
+                let re = new RegExp(find, 'g');
+
+                userMessage = userMessage.replace(re,
+                    ' <span style=" display: inline-block;" >&#x200b;' +
+                    '<img src=\'https:' + emotesInSetGlobal[k]['urls']['1']
+                    + '\' alt=\'' + emotesInSetGlobal[k].name + '\' />' +
+                    '</span> ');
+            }
+        }
+        // Replace FFZ Channel Emotes with img
+        let ffzChannels = this.emoteManager_.getFfzChannels();
+        if (ffzChannels.hasOwnProperty(this.chatName_)) {
+            let ffzChannelId = ffzChannels[this.chatName_]['room']['_id'];
+            if (ffzChannels[this.chatName_]['sets'][ffzChannelId] != null) {
+                let ffzChannelEmoteSet =
+                    ffzChannels[this.chatName_]['sets'][ffzChannelId]['emoticons'];
+                for (let j = 0; j < ffzChannelEmoteSet.length; j++) {
+                    let find = JSON.stringify(ffzChannelEmoteSet[j].name);
+                    find = find.substring(1, find.length - 1);
+                    find = '(^|\\b|\\s)'
+                        + find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&')
+                        + '(?=\\s|$)';
+
+                    let re = new RegExp(find, 'g');
+
+                    userMessage = userMessage.replace(re,
+                        ' <span style=" display: inline-block;" >&#x200b;' +
+                        '<img src=\'https:' + ffzChannelEmoteSet[j]['urls']['1']
+                        + '\' alt=\'' + ffzChannelEmoteSet[j].name + '\' />' +
+                        '</span> ');
+                }
+            }
+        }
+        return userMessage;
+    }
+
+    /**
+     * Puts badges img tags in the message
+     * @param {string} userMessage
+     * @return {string}
+     */
+    replaceBadges(userMessage) {
+        let newElement;
+        if (this.action_) {
+            newElement = $('<li><span style="color: gray;font-size: 11px;">'
+                + this.getTimestamp() + '</span><span style="color: ' + this.chatterColor_
+                + ';font-weight: bold;"> ' + this.chatterName_ + '</span>' +
+                ' <span style="color: ' + this.chatterColor_ + ';">'
+                + userMessage + '</span></li>');
+        } else {
+            newElement = $('<li><span style="color: gray;font-size: 11px;">'
+                + this.getTimestamp() + '</span><span style="color: ' + this.chatterColor_
+                + ';font-weight: bold;"> ' + this.chatterName_ + '</span>: '
+                + userMessage + '</li>');
+        }
+
+        // Put badges in message
+        for (let j = 0; j < this.badges_.length; j++) {
+            let badge = this.badges_[j].split('/');
+            let badgeGroup = this.badgeManager_.getBadgesChannels()[this.chatName_][badge[0]];
+            if (badge[0].localeCompare('subscriber') === 0) {
+                newElement.find('span:nth-of-type(2):first').before(
+                    '<div style=" display: inline-block;' +
+                    'vertical-align: -32%;border-radius: 2px;' +
+                    'background-image: url(' +
+                    badgeGroup['versions'][badge[1]]['image_url_1x']
+                    + ');" ></div>');
+            } else {
+                newElement.find('span:nth-of-type(2):first').before(
+                    '<div style=" display: inline-block;' +
+                    'vertical-align: -32%;border-radius: 2px;' +
+                    'background-image: url(' +
+                    this.badgeManager_
+                        .getBadgesGlobal()[badge[0]]['versions'][badge[1]]['image_url_1x']
+                    + ');"></div>');
+            }
+        }
+        return newElement;
+    }
+
+    /**
+     * Searches for URLs in the given String and replaces them with the
+     * proper <a href=""> HTML Tag
+     * @param {string} txt - Text in which the links get searched
+     * @return {string} Text with <a href=""> HTML Tags
+     * @private
+     */
+    static matchURL_(txt) {
+        let pattern =
+            /((^|\s|&#32;)(http(s)?:\/\/.)?(www\.)?([-a-zA-Z0-9@:%_+~#=]|\.(?!\.)){2,256}\.[a-z]{2,8}\b([-a-zA-Z0-9@:%_+.~#?&/=]*))(?=(\s|$|&#32;))/g;
+        txt = txt.replace(pattern, function(str, p1) {
+            let addScheme = p1.indexOf('http://') === -1
+                && p1.indexOf('https://') === -1;
+            let link = ' <a href="'
+                + (addScheme ? 'http://' : '')
+                + p1 + '" target="_blank">' + p1 + '</a>';
+            if (p1.startsWith(' ')) {
+                link = ' <a href="'
+                    + (addScheme ? 'http://' : '') +
+                    p1.substring(1, p1.length) + '" target="_blank">' + p1 + '</a>';
+            } else if (p1.startsWith('&#32;')) {
+                link = ' <a href="'
+                    + (addScheme ? 'http://' : '') +
+                    p1.substring(5, p1.length) + '" target="_blank">' + p1 + '</a>';
+            }
+            return link;
+        });
+        return txt;
+    }
+
+    /**
+     * Escape HTML characters in the message before adding to the chat
+     * @param {string} txt message to escape
+     * @return {string} escaped message
+     * @private
+     */
+    static escapeString_(txt) {
+        return txt.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+            .replace(/`/g, '&#96;').replace(/!/g, '&#33;')
+            .replace(/@/g, '&#64;').replace(/\$/g, '&#36;')
+            .replace(/%/g, '&#37;').replace(/=/g, '&#61;')
+            .replace(/\+/g, '&#43;').replace(/{/g, '&#123;')
+            .replace(/}/g, '&#125;').replace(/\[/g, '&#91;')
+            .replace(/]/g, '&#93;');
+    }
+}
+
+/**
+ * @param data
+ * @param data.getUsers
+ * @param data.getUsers.display_name
+ * @param data.logo
+ * @param ffzGlobal.default_sets
+ * @param data.chatter_count
+ * @param data.chatters
+ * @param chatters.moderators
+ * @param chatters.viewers
+ * @param chatters.global_mods
+ * @param chatters.admins
+ * @param chatters.staff
+ */
+
+
+class MessageParser {
+    /**
+     * @param {Object.<NameColorManager>} nameColorManager
+     * @param {EmoteManager} emoteManager
+     * @param {BadgeManager} badgeManager
+     * @constructor
+     */
+    constructor(nameColorManager, emoteManager, badgeManager) {
+        /** @private */
+        this.nameColorManager_ = nameColorManager;
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.badgeManager_ = badgeManager;
+    }
+
+    /**
+     * Parses an IRC message from Twitch and appends it to the corresponding chat.
+     *
+     * @param {string} msg Single raw chat message sent by Twitch
+     * @return {Array.<ChatMessage>} Array of ChatMessage and UserMessage
+     */
+    parseMessage(msg) {
+        let msgParts = msg.split(' ');
+
+        let chatName = MessageParser.parseChatName_(msgParts);
+
+        if (msgParts[2].localeCompare('WHISPER') === 0) {
+            // ToDo: Implement whisper
+            return [];
+        } else if (msgParts[2].startsWith('GLOBALUSERSTATE')) {
+            return [];
+        } else if (chatName.length < 1) {
+            // console.log('Message with no Chat specified: ' + msg);
+            return [];
+        }
+        /** @type {Array.<ChatMessage>} */
+        let chatMessages = [];
+        if (msgParts[1].localeCompare('JOIN') === 0) {
+            // Ignore JOINs (a user joined a channel)
+        } else if (msgParts[1].localeCompare('PART') === 0) {
+            // Ignore PARTs (a user left a channel)
+        } else if (msgParts[1].localeCompare('353') === 0) {
+            // Ignore namelist
+        } else if (msgParts[1].localeCompare('366') === 0) {
+            // Ignore end of namelist
+        } else if (msgParts[1].localeCompare('MODE') === 0) {
+            // Ignore gain/lose of Moderator rights
+        } else if (msgParts[2].localeCompare('ROOMSTATE') === 0) {
+            chatMessages = MessageParser.parseRoomstate_(msg, chatName);
+        } else if (msgParts[2].localeCompare('USERSTATE') === 0) {
+            // Ignore Userstate
+        } else if (msgParts[2].localeCompare('USERNOTICE') === 0) {
+            chatMessages = this.parseUsernotice_(msg, chatName);
+        } else if (msgParts[2].localeCompare('CLEARCHAT') === 0) {
+            // ToDo: Bans/Timeouts
+        } else if (msgParts[1].localeCompare('HOSTTARGET') === 0) {
+            // Ignore hosting message
+        } else if (msgParts[2].localeCompare('NOTICE') === 0
+            || msgParts[1].localeCompare('PRIVMSG') === 0) {
+            chatMessages = MessageParser.parseNotice_(msgParts, chatName);
+        } else if (msgParts[2].localeCompare('PRIVMSG') === 0) {
+            chatMessages = this.parsePrivmsg_(msgParts, chatName);
+        } else if (chatName.length >= 1) {
+            chatMessages = [new ChatMessage(chatName, msg)];
+        } else {
+            alert('Error');
+        }
+        return chatMessages;
+    }
+
+    /**
+     * @param {Array} msgParts
+     * @param {string} chatName channel the ROOMSTATE belongs to
+     * @return {Array.<ChatMessage>} newMessages
+     */
+    parsePrivmsg_(msgParts, chatName) {
+        let username = msgParts[1].split('!', 1);
+        username = username[0].substring(1, username[0].length);
+
+        let userMessage = msgParts;
+        let metaInfoRaw = userMessage[0].substring(1, userMessage[0].length);
+        let metaInfo = this.getMetaInfoWithColor_(metaInfoRaw.split(';'), username);
+        if (metaInfo.username != null) {
+            username = metaInfo.username;
+        }
+
+        userMessage = userMessage.slice(4).join(' ');
+        userMessage = userMessage.substring(1, userMessage.length);
+
+        let action = false;
+        if (userMessage.startsWith('\x01ACTION')) {
+            action = true;
+            userMessage = userMessage.substring(8, userMessage.length - 2);
+        }
+        let messageContent = userMessage;
+        let emotePositions = metaInfo.emotes;
+        let badges = metaInfo.badges;
+        let color = metaInfo.color;
+        return [
+            new UserMessage(chatName, messageContent, badges,
+                emotePositions, username, color, action, this.emoteManager_, this.badgeManager_),
+        ];
+    }
+
+    /**
+     * @param {string} msg ROOMSTATE message
+     * @param {string} chatName channel the ROOMSTATE belongs to
+     * @return {Array.<ChatMessage>} newMessages
+     * @private
+     */
+    static parseRoomstate_(msg, chatName) {
+        let roomstateMsg = msg.split(' ')[0];
+        roomstateMsg = roomstateMsg.substring(1, roomstateMsg.length);
+        roomstateMsg = roomstateMsg.split(';');
+        let infoMessage = '';
+        let chatInput = $('#' + chatName + ' .chatInput');
+        chatInput.find('p').remove();
+        for (let j = 0; j < roomstateMsg.length; j++) {
+            let info = roomstateMsg[j].split('=');
+            let infoKeyword = info[0];
+            switch (infoKeyword) {
+                case 'broadcaster-lang':
+                    infoMessage += info[1] + '  ';
+                    break;
+                case 'emote-only':
+                    if (info[1].localeCompare('1') === 0) {
+                        infoMessage += 'EMOTE-ONLY  ';
+                    }
+                    break;
+                case 'followers-only':
+                    if (info[1].localeCompare('-1') !== 0) {
+                        infoMessage += 'FOLLOW ' + info[1] + 'm  ';
+                    }
+                    break;
+                case 'r9k':
+                    if (info[1].localeCompare('1') === 0) {
+                        infoMessage += 'R9K  ';
+                    }
+                    break;
+                case 'slow':
+                    if (info[1].localeCompare('0') !== 0) {
+                        infoMessage += 'SLOW ' + info[1] + 's  ';
+                    }
+                    break;
+                case 'subs-only':
+                    if (info[1].localeCompare('1') === 0) {
+                        infoMessage += 'SUB  ';
+                    }
+                    break;
+            }
+        }
+        return [new RoomstateMessage(chatName, infoMessage)];
+    }
+
+    /**
+     * @param {string} msg USERNOTICE message
+     * @param {string} chatName channel the ROOMSTATE belongs to
+     * @return {Array.<ChatMessage>} newMessages
+     * @private
+     */
+    parseUsernotice_(msg, chatName) {
+        let chatMessages = [];
+
+        let usernoticeMessage = msg.split(' ');
+        usernoticeMessage = usernoticeMessage.slice(4).join(' ');
+        let metaInfoRaw = msg.substring(1, msg.length).split(' ')[0].split(';');
+        let metaInfo = MessageParser.getMetaInfo_(metaInfoRaw);
+        chatMessages.push(new ChatMessage(chatName,
+            ((metaInfo.systemMsg != null) ? (metaInfo.systemMsg + ' ') : '')));
+        if (usernoticeMessage.length > 0) {
+            chatMessages.push(this.parseMessage(msg.split(' ')[0] + ' :' +
+                metaInfo.username.toLowerCase() + '!' +
+                metaInfo.username.toLowerCase() + '@' +
+                metaInfo.username.toLowerCase() + '.tmi.twitch.tv PRIVMSG #'
+                + chatName + ' ' + usernoticeMessage)[0]);
+        }
+        return chatMessages;
+    }
+
+    /**
+     * @param {Array.<string>} msgParts
+     * @param {string} chatName channel the ROOMSTATE belongs to
+     * @return {Array.<ChatMessage>} newMessages
+     * @private
+     */
+    static parseNotice_(msgParts, chatName) {
+        let noticeMessage = msgParts;
+        let slicePoint = msgParts[2].localeCompare('NOTICE') === 0 ? 4 : 3;
+        noticeMessage = noticeMessage.slice(slicePoint).join(' ');
+        return [new ChatMessage(chatName, noticeMessage.substring(1, noticeMessage.length))];
+    }
+
+    /**
+     * @param {Array.<string>} msgParts
+     * @return {string} chatName the message belongs to
+     * @private
+     */
+    static parseChatName_(msgParts) {
+        let chatName = '';
+        // Parse chat channel name the message is for
+        for (let j = 0; j < msgParts.length; j++) {
+            if (msgParts[j].startsWith('#')) {
+                chatName = msgParts[j].slice(1, msgParts[j].length);
+                chatName = chatName.trim();
+                break;
+            }
+        }
+        return chatName;
+    }
+
+    /**
+     * Parses the meta information part of a chat message.
+     *
+     * @param {string[]} metaMsg [{@badges=<badges>},{color=<color>},...]
+     * @param {string} username user from whom the message was sent
+     * @return {Object} Object with one property for every meta information
+     * @private
+     */
+    getMetaInfoWithColor_(metaMsg, username) {
+        let metaInfo = {};
+
+        metaInfo.color = '#acacbf';
+        metaInfo.emotes = '';
+        metaInfo.badges = '';
+
+        let gotColor = false;
+        for (let j = 0; j < metaMsg.length; j++) {
+            let info = metaMsg[j].split('=');
+            if (info.length <= 1 || info[1].localeCompare('') === 0) {
+                continue;
+            }
+
+            if (info[0].localeCompare('color') === 0) {
+                metaInfo.color = info[1];
+                if (metaInfo.color.localeCompare('') === 0
+                    && !(this.nameColorManager_.getUserColors().hasOwnProperty(username))) {
+                    metaInfo.color = this.nameColorManager_.randomColor();
+                    this.nameColorManager_.addUserColor(username, metaInfo.color);
+                } else if (metaInfo.color.localeCompare('') === 0
+                    && this.nameColorManager_.getUserColors().hasOwnProperty(username)) {
+                    metaInfo.color = this.nameColorManager_.getUserColors()[username];
+                }
+                gotColor = true;
+            } else if (info[0].localeCompare('display-name') === 0) {
+                metaInfo.username = info[1];
+            } else if (info[0].localeCompare('emotes') === 0) {
+                metaInfo.emotes = info[1].split('/');
+            } else if (info[0].localeCompare('badges') === 0) {
+                metaInfo.badges = info[1].split(',');
+            } else if (info[0].localeCompare('system-msg') === 0) {
+                metaInfo.systemMsg = info[1].replace(/\\s/g, ' ');
+            } else if (info[0].localeCompare('emote-sets') === 0) {
+                metaInfo.emoteSets = info[1].split(',');
+            }
+        }
+
+        if (!gotColor) {
+            if (this.nameColorManager_.getUserColors().hasOwnProperty(username)) {
+                metaInfo.color = this.nameColorManager_.getUserColors()[username];
+            } else {
+                metaInfo.color = NameColorManager.randomColor();
+                this.nameColorManager_.addUserColor(username, metaInfo.color);
+            }
+        }
+
+        // Color contrast correction
+        metaInfo.color = NameColorManager.colorCorrection(metaInfo.color);
+
+        return metaInfo;
+    }
+
+    /**
+     * Parses the meta information part of a chat message.
+     *
+     * @param {string[]} metaMsg [{@badges=<badges>},{color=<color>},...]
+     * @return {Object} Object with one property for every meta information
+     * @private
+     */
+    static getMetaInfo_(metaMsg) {
+        let metaInfo = {};
+
+        metaInfo.emotes = '';
+        metaInfo.badges = '';
+
+        for (let j = 0; j < metaMsg.length; j++) {
+            let info = metaMsg[j].split('=');
+            if (info.length <= 1 || info[1].localeCompare('') === 0) {
+                continue;
+            }
+
+            if (info[0].localeCompare('display-name') === 0) {
+                metaInfo.username = info[1];
+            } else if (info[0].localeCompare('emotes') === 0) {
+                metaInfo.emotes = info[1].split('/');
+            } else if (info[0].localeCompare('badges') === 0) {
+                metaInfo.badges = info[1].split(',');
+            } else if (info[0].localeCompare('system-msg') === 0) {
+                metaInfo.systemMsg = info[1].replace(/\\s/g, ' ');
+            } else if (info[0].localeCompare('emote-sets') === 0) {
+                metaInfo.emoteSets = info[1].split(',');
+            }
+        }
+        return metaInfo;
+    }
+}
+
+/**
+ * @param data.emoticon_sets
+ * @param data.badge_sets
+ */
+
+
+class App {
+    /**
+     * Created the whole application
+     * @constructor
+     */
+    constructor() {
+        document.title += ` ${version}`;
+        /** @private */
+        this.appUser_ = new AppUser();
+        /** @private */
+        this.nameColorManager_ = new NameColorManager();
+        /** @private */
+        this.badgeManager_ = new BadgeManager();
+        /** @private */
+        this.emoteManager_ = new EmoteManager(this.appUser_);
+        /** @private */
+        this.chatManager_ = new ChatManager(this.emoteManager_);
+        /** @private */
+        new FavoritesList(this.badgeManager_, this.emoteManager_, this.chatManager_);
+        /** @private */
+        this.sendIrcConnection_ = new SendIRCConnection(this.appUser_);
+        /** @private */
+        this.receiveIrcConnection_ = new ReceiveIRCConnection(this.appUser_,
+            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_),
+            this.chatManager_);
+        this.chatManager_.setReceiveIrcConnection(this.receiveIrcConnection_);
+        this.chatManager_.setSendIrcConnection(this.sendIrcConnection_);
+    }
+}
+
+let url = window.location.href;
+let urlMainAndTail = url.split('#');
+let urlTailParts;
+
+if (urlMainAndTail.length > 1) {
+    urlTailParts = urlMainAndTail[1].split('&');
+    localStorage.accessToken = urlTailParts[0].split('=')[1];
+} else if (localStorage.getItem('accessToken') !== null) {
+} else {
+    window.location.replace(TwitchConstants.AUTHORIZE_URL);
+}
+
+$(function() { // this will be called when the DOM is ready
+    new App();
+});
+
+}());
 //# sourceMappingURL=bundle.js.map

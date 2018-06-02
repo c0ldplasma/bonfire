@@ -55,16 +55,17 @@ class ChatManager {
     /**
      * Removes the Chat from the chatList_ and the DOM
      *
-     * @param {string} channelName Name of the channel that will be removed
+     * @param {Object} event
      * @private
      */
-    removeChat_(channelName) {
-        delete this.chatList_[channelName];
-
+    removeChat_(event) {
+        let channelName = event.data[1].toLowerCase();
+        let thiss = event.data[0];
+        delete thiss.chatList_[channelName];
         $(document).off('click', '.toggleStream[id$=\'' + channelName + '\']');
         $(this).parent().parent().remove();
-        this.receiveIrcConnection_.leaveChat(channelName);
-        this.sendIrcConnection_.leaveChat(channelName);
+        thiss.receiveIrcConnection_.leaveChat(channelName);
+        thiss.sendIrcConnection_.leaveChat(channelName);
     }
 
     /**
@@ -84,10 +85,8 @@ class ChatManager {
             this.receiveIrcConnection_.joinChat(channelLC);
             this.sendIrcConnection_.joinChat(channelLC);
 
-            /* $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
-                this.removeChat_(channelName)); */
-
-            $(document).find('.removeChat#' + channelLC).on('click', this.removeChat_(channelName));
+            $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
+                [this, channelName], this.removeChat_);
 
             // ToDO: Check if .sortable is needed every time
             chatArea.sortable({

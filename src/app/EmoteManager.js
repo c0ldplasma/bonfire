@@ -73,7 +73,7 @@ class EmoteManager {
             async: true,
         }).done(function(data) {
             this.userEmotes_ = data.emoticon_sets;
-            console.log(data.emoticon_sets);
+            // console.log(data.emoticon_sets);
         });
 
         // Download Global BTTV Emotes JSON

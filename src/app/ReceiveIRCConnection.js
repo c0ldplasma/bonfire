@@ -27,12 +27,10 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
 
         for (let i = 0; i < messages.length; i++) {
             let msg = messages[i];
-            // console.log(msg);
             if (msg.startsWith('PING :tmi.twitch.tv')) {
                 this.connection_.send('PONG :tmi.twitch.tv');
             } else if (msg.length > 1) {
                 let chatMessages = this.messageParser_.parseMessage(msg);
-                // console.log(chatMessages);
                 this.chatManager_.addMessages(chatMessages);
             } else {
                 // console.log('Received empty message in ReceiveIRVConnection onMessage_()');

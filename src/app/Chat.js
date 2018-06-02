@@ -14,7 +14,6 @@ class Chat {
      * @param {SendIRCConnection} sendIrcConnection
      */
     constructor(channelName, emoteManager, receiveIrcConnection, sendIrcConnection) {
-        console.log('Send connection 1: ' + sendIrcConnection);
         /** @private */
         this.channelName_ = channelName;
         /** @private */
@@ -25,7 +24,6 @@ class Chat {
         this.receiveIrcConnection_ = receiveIrcConnection;
         /** @private */
         this.sendIrcConnection_ = sendIrcConnection;
-        console.log('Send connection 2: ' + this.sendIrcConnection_);
         /** @private */
         this.messageCount_ = 0;
         /** @private */

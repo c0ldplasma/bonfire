@@ -16,12 +16,12 @@ class TwitchApi {
     static getUsers(users, context, callback) {
         $.ajax({
             context: context,
-            url: ('https://api.twitch.tv/kraken/users?login='
-                + users),
+            url: ('https://api.twitch.tv/helix/users'),
+            dataType: 'json',
             headers: {
-                'Accept': 'application/vnd.twitchtv.v5+json',
                 'Client-ID': TwitchConstants.CLIENT_ID,
             },
+            data: {login: users},
             async: true,
         }).done(callback);
     }

@@ -3,6 +3,7 @@
 /**
  * @param data._total
  * @param data.users._id
+ * @param data.profile_image_url
  */
 
 import TwitchApi from './TwitchApi.js';
@@ -40,20 +41,8 @@ class FavoritesList {
         try {
             let channelsArray = JSON.parse(localStorage.getItem('channels'));
             if (channelsArray !== null) {
-                let channelCount = 0;
-                let channels = '';
-                for (let i = 0; i < channelsArray.length; i++) {
-                    channels += channelsArray[i] + ',';
-                    channelCount++;
-                    if (channelCount > 99) {
-                        channels = channels.slice(0, -1);
-                        this.addFavToList(channels);
-                        channels = '';
-                        channelCount = 0;
-                    }
-                }
-                if (channels.length > 1) {
-                    channels = channels.slice(0, -1);
+                while (channelsArray.length) {
+                    let channels = channelsArray.splice(0, 98);
                     this.addFavToList(channels);
                 }
             } else {
@@ -90,37 +79,33 @@ class FavoritesList {
     /**
      * Add a channel to the list of favorites
      *
-     * @param {string} channelLC channel name or null
+     * @param {Array.<string>} channelArray channel name or null
      */
-    addFavToList(channelLC) {
-        let channels = document.getElementById('newFavInput').value;
-        if ($.type(channelLC) === 'string') {
-            channels = channelLC;
+    addFavToList(channelArray) {
+        let channels = document.getElementById('newFavInput').value.split(',');
+        if ($.isArray(channelArray)) {
+            channels = channelArray;
         }
-        // console.log(channels);
-        channels = channels.replace(/\s+/g, '');
-        let channelsCount = channels.split(',').length;
+        let channelsCount = channels.length;
 
-        if (channels.length >= 3) {
-            // console.log(this);
-            TwitchApi.getUsers(channels, this, function(data) {
-                let notExistingChannelsCount = channelsCount - data._total;
-                for (let i = 0; i < data._total; i++) {
-                    let channel = data.users[i].display_name;
-                    let channelId = data.users[i]._id;
-                    let profilePicURL = data.users[i].logo;
-                    // ToDo: Check if next line is necessary
-                    document.getElementById('newFavInput').placeholder = '';
-                    // noinspection JSPotentiallyInvalidUsageOfClassThis
-                    this.addFavLine_(channel, profilePicURL, channelId);
-                }
+        TwitchApi.getUsers(channels, this, function(data) {
+            data = data.data;
+            let notExistingChannelsCount = channelsCount - data._total;
+            for (let i = 0; i < data.length; i++) {
+                let channel = data[i].display_name;
+                let channelId = data[i].id;
+                let profilePicURL = data[i].profile_image_url;
+                // ToDo: Check if next line is necessary
+                document.getElementById('newFavInput').placeholder = '';
+                // noinspection JSPotentiallyInvalidUsageOfClassThis
+                this.addFavLine_(channel, profilePicURL, channelId);
+            }
 
-                if (notExistingChannelsCount > 0) {
-                    // noinspection JSPotentiallyInvalidUsageOfClassThis
-                    this.showChannelDoesNotExistInfo_(notExistingChannelsCount);
-                }
-            });
-        }
+            if (notExistingChannelsCount > 0) {
+                // noinspection JSPotentiallyInvalidUsageOfClassThis
+                this.showChannelDoesNotExistInfo_(notExistingChannelsCount);
+            }
+        });
     }
 
     /**
