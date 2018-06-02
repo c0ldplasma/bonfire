@@ -45,14 +45,13 @@ class AppUser {
      */
     requestAppUserData() {
         TwitchApi.getUserFromOAuth(this, function(data) {
-            if (data.token.valid === false) {
-                window.location.replace(TwitchConstants.AUTHORIZE_URL);
-            } else if (typeof(data.token) !== 'undefined') {
-                this.userName_ = data.token.user_name;
+            console.log(data);
+            if (typeof(data.login) !== 'undefined') {
+                this.userName_ = data.login;
                 // noinspection JSUnusedGlobalSymbols
-                this.userNameLC_ = this.userName_.toLowerCase();
+                this.userNameLC_ = data.login.toLowerCase();
                 // noinspection JSUnusedGlobalSymbols
-                this.userId_ = data.token.user_id;
+                this.userId_ = data.user_id;
             } else {
                 alert('Error while getting username');
             }

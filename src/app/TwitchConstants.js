@@ -33,9 +33,9 @@ class TwitchConstants {
      * @constructor
      */
     static get AUTHORIZE_URL() {
-        return `https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id=
-        ${TwitchConstants.CLIENT_ID}&redirect_uri=${TwitchConstants.SELF_URL}&scope=
-        ${TwitchConstants.PERMISSION_SCOPE}`;
+        return 'https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=' +
+        TwitchConstants.CLIENT_ID + '&redirect_uri=' + TwitchConstants.SELF_URL + '&scope=' +
+        TwitchConstants.PERMISSION_SCOPE;
     }
 
     /**

@@ -33,11 +33,15 @@ class TwitchApi {
      */
     static getUserFromOAuth(context, callback) {
         $.ajax({
+            statusCode: {
+                401: function() {
+                    window.location.replace(TwitchConstants.AUTHORIZE_URL);
+                },
+            },
             context: context,
-            url: ('https://api.twitch.tv/kraken'),
+            url: ('https://id.twitch.tv/oauth2/validate'),
+            dataType: 'json',
             headers: {
-                'Accept': 'application/vnd.twitchtv.v5+json',
-                'Client-ID': TwitchConstants.CLIENT_ID,
                 'Authorization': ('OAuth ' + localStorage.accessToken),
             },
             async: false,

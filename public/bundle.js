@@ -1,6 +1,9 @@
 (function () {
 'use strict';
 
+/**
+ * Twitch constants like CLIENT_ID and API-URLs
+ */
 class TwitchConstants {
     /**
      * @return {string} Client Id for authorization on the Twitch apis
@@ -31,9 +34,9 @@ class TwitchConstants {
      * @constructor
      */
     static get AUTHORIZE_URL() {
-        return `https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id=
-        ${TwitchConstants.CLIENT_ID}&redirect_uri=${TwitchConstants.SELF_URL}&scope=
-        ${TwitchConstants.PERMISSION_SCOPE}`;
+        return 'https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=' +
+        TwitchConstants.CLIENT_ID + '&redirect_uri=' + TwitchConstants.SELF_URL + '&scope=' +
+        TwitchConstants.PERMISSION_SCOPE;
     }
 
     /**
@@ -81,11 +84,15 @@ class TwitchApi {
      */
     static getUserFromOAuth(context, callback) {
         $.ajax({
+            statusCode: {
+                401: function() {
+                    window.location.replace(TwitchConstants.AUTHORIZE_URL);
+                },
+            },
             context: context,
-            url: ('https://api.twitch.tv/kraken'),
+            url: ('https://id.twitch.tv/oauth2/validate'),
+            dataType: 'json',
             headers: {
-                'Accept': 'application/vnd.twitchtv.v5+json',
-                'Client-ID': TwitchConstants.CLIENT_ID,
                 'Authorization': ('OAuth ' + localStorage.accessToken),
             },
             async: false,
@@ -173,14 +180,13 @@ class AppUser {
      */
     requestAppUserData() {
         TwitchApi.getUserFromOAuth(this, function(data) {
-            if (data.token.valid === false) {
-                window.location.replace(TwitchConstants.AUTHORIZE_URL);
-            } else if (typeof(data.token) !== 'undefined') {
-                this.userName_ = data.token.user_name;
+            console.log(data);
+            if (typeof(data.login) !== 'undefined') {
+                this.userName_ = data.login;
                 // noinspection JSUnusedGlobalSymbols
-                this.userNameLC_ = this.userName_.toLowerCase();
+                this.userNameLC_ = data.login.toLowerCase();
                 // noinspection JSUnusedGlobalSymbols
-                this.userId_ = data.token.user_id;
+                this.userId_ = data.user_id;
             } else {
                 alert('Error while getting username');
             }
@@ -544,9 +550,6 @@ class EmoteManager {
     }
 }
 
-/**
- * Manages the name color for chatters who never set their name color
- */
 class NameColorManager {
     /**
      * @constructor
