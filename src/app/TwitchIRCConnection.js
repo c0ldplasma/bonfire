@@ -20,10 +20,14 @@ class TwitchIRCConnection {
         }
 
         this.connection_ = new WebSocket(TwitchConstants.WEBSOCKET_URL);
-        this.connection_.onopen = this.onOpen_;
-        this.connection_.onerror = this.onError_;
+        this.connection_.onopen = this.onOpen_.bind(this);
+        this.connection_.onerror = TwitchIRCConnection.onError_.bind(this);
     }
 
+    /**
+     * Gets called when the connection established
+     * @private
+     */
     onOpen_() {
         this.connection_.send('CAP REQ :twitch.tv/membership');
         this.connection_.send('CAP REQ :twitch.tv/tags');
@@ -33,28 +37,45 @@ class TwitchIRCConnection {
     }
 
     /**
-     * Calles on error
+     * Gets called on error
      * @private
      */
-    onError_() {
+    static onError_() {
         console.log('WebSocket Error ' + error);
         alert('ERROR: ' + error);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
-     * Calles on message
+     * Gets called on message
      * @param {object} event event triggered by the Websocket connection
      * @private
+     * @abstract
      */
-    onMessage_(event) {
-    };
+    onMessage_(event) {};
 
+    /**
+     * Leave the specified chat
+     * @param {string} chatName
+     */
     leaveChat(chatName) {
         this.connection_.send('PART #' + chatName);
     }
 
+    /**
+     * Join the specified chat
+     * @param {string} chatName
+     */
     joinChat(chatName) {
         this.connection_.send('JOIN #' + chatName);
+    }
+
+    /**
+     * Sends the specified message to the Websocket connection
+     * @param {string} message
+     */
+    send(message) {
+        this.connection_.send(message);
     }
 }
 

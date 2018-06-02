@@ -1,4 +1,5 @@
 import TwitchApi from './TwitchApi.js';
+import RoomstateMessage from './RoomstateMessage.js';
 
 /**
  * Represents one chat column on the app
@@ -8,10 +9,23 @@ class Chat {
      * Adds the chat column for channelName to the app
      *
      * @param {string} channelName Name of the channel
+     * @param {EmoteManager} emoteManager
+     * @param {ReceiveIRCConnection} receiveIrcConnection
+     * @param {SendIRCConnection} sendIrcConnection
      */
-    constructor(channelName) {
+    constructor(channelName, emoteManager, receiveIrcConnection, sendIrcConnection) {
+        console.log('Send connection 1: ' + sendIrcConnection);
         /** @private */
         this.channelName_ = channelName;
+        /** @private */
+        this.channelNameLC_ = channelName.toLowerCase();
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.receiveIrcConnection_ = receiveIrcConnection;
+        /** @private */
+        this.sendIrcConnection_ = sendIrcConnection;
+        console.log('Send connection 2: ' + this.sendIrcConnection_);
         /** @private */
         this.messageCount_ = 0;
         /** @private */
@@ -28,21 +42,25 @@ class Chat {
      * @param {Object.<ChatMessage>} chatMessage
      */
     addMessage(chatMessage) {
-        let chatMessageList = $('#' + this.channelName_ + 'contentArea');
+        if (chatMessage instanceof RoomstateMessage) {
+            let chatInput = $('.chatInput#' + chatMessage.getChatName().toLowerCase());
+            chatInput.append(chatMessage.getHtml());
+        } else {
+            let chatMessageList = $('#' + this.channelName_.toLowerCase() + 'contentArea');
 
-        if (chatMessageList.children('div').length === 0 ||
-            (chatMessageList.children('div').length !== 0 &&
-                chatMessageList.children('div:last')
-                    .children('li').length >= this.MESSAGES_IN_CONTAINER_)) {
-            chatMessageList.append('<div></div>');
-            this.containerCount_++;
+            if (chatMessageList.children('div').length === 0 ||
+                (chatMessageList.children('div').length !== 0 &&
+                    chatMessageList.children('div:last')
+                        .children('li').length >= this.MESSAGES_IN_CONTAINER_)) {
+                chatMessageList.append('<div></div>');
+                this.containerCount_++;
+            }
+            chatMessageList.children('div:last').append(chatMessage.getHtml());
+            this.messageCount_++;
+            this.limitMessages_();
+            this.hideNotVisibleMessages();
+            this.correctScrollPosition_();
         }
-
-        chatMessageList.children('div:last').append(chatMessage.getHtml());
-        this.messageCount_++;
-        this.limitMessages_();
-        this.hideNotVisibleMessages();
-        this.correctScrollPosition_();
     }
 
     /**
@@ -53,6 +71,7 @@ class Chat {
     limitMessages_() {
         if (this.messageCount_ >= this.MESSAGE_LIMIT_) {
             $('#' + this.channelName_ + ' .chatContent .chatMessageList div:first').remove();
+            // noinspection JSUnusedGlobalSymbols
             this.messageCount_ -= this.MESSAGES_IN_CONTAINER_;
             this.containerCount_--;
         }
@@ -75,7 +94,7 @@ class Chat {
      */
     isScrolledToBottom() {
         let bottom = false;
-        let chatContent = $('#' + this.channelName_ + 'scrollArea');
+        let chatContent = $('#' + this.channelNameLC_ + 'scrollArea');
         if (chatContent[0].scrollHeight - chatContent.scrollTop()
             < chatContent.outerHeight() + 50) bottom = true;
         return bottom;
@@ -87,13 +106,13 @@ class Chat {
     correctScrollPosition_() {
         // Scroll to bottom
         let bottom = this.isScrolledToBottom();
-        let chatContent = $('#' + this.channelName_ + 'scrollArea');
+        let chatContent = $('#' + this.channelNameLC_ + 'scrollArea');
         if (bottom) {
             let contentHeight = chatContent[0].scrollHeight;
             chatContent.scrollTop(contentHeight + 50);
             // chatContent.stop(true, false).delay(50)
             // .animate({ scrollTop: contentHeight }, 2000, 'linear');
-            $('#' + this.channelName_ + ' .chatContent .chatMessageList')
+            $('#' + this.channelNameLC_ + ' .chatContent .chatMessageList')
                 .find('p:last').imagesLoaded(function() {
                 setTimeout(function() {
                     contentHeight = chatContent[0].scrollHeight;
@@ -104,7 +123,7 @@ class Chat {
                 }, 50);
             });
         } else if (!bottom
-            && $('#' + this.channelName_ + ' .chatNewMessagesInfo').is(':hidden')) {
+            && $('#' + this.channelNameLC_ + ' .chatNewMessagesInfo').is(':hidden')) {
             let contentHeight = chatContent[0].scrollHeight;
             chatContent.scrollTop(contentHeight + 50);
             // chatContent.stop(true, false).delay(50)
@@ -112,6 +131,9 @@ class Chat {
         }
     }
 
+    /**
+     * @return {string} HTML Code for the chat
+     */
     getHtml() {
         let channelLC = this.channelName_.toLowerCase();
         return '<div class="chat" id="' + channelLC + '">' +
@@ -145,6 +167,9 @@ class Chat {
             + '<div class="chatViewerlist" id="' + channelLC + '"></div>';
     }
 
+    /**
+     * Adds all abilities to the Chat (Button actions etc.)
+     */
     addAbilities() {
         this.addEmotesToEmoteMenu_();
         this.addEmoteMenuImgClickAbility_();
@@ -158,11 +183,13 @@ class Chat {
         this.addSendMessagesAbility_();
         this.addNewMessageInfoAbility_();
     }
-
+    /**
+     * @private
+     */
     addEmotesToEmoteMenu_() {
-        // Add Emotes to Emote Menu
-        // Twitch Global
-        console.log(userEmotes);
+        let channelLC = this.channelName_.toLowerCase();
+        let userEmotes = this.emoteManager_.getUserEmotes();
+        // Twitch Global/Channel
         for (let j in userEmotes) {
             if ({}.hasOwnProperty.call(userEmotes, j)) {
                 let emoteSet = userEmotes[j];
@@ -182,6 +209,7 @@ class Chat {
             }
         }
         // BTTV Global
+        let bttvGlobal = this.emoteManager_.getBttvGlobal();
         for (let i = 0; i < bttvGlobal.length; i++) {
             if (bttvGlobal[i].channel == null) {
                 $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .bttvEmotes')
@@ -191,6 +219,7 @@ class Chat {
             }
         }
         // FFZ Global
+        let ffzGlobal = this.emoteManager_.getFfzGlobal();
         for (let j = 0; j < ffzGlobal.default_sets.length; j++) {
             let emoteSetGlobal = ffzGlobal.default_sets[j];
             let emotesInSetGlobal = ffzGlobal['sets'][emoteSetGlobal]['emoticons'];
@@ -204,6 +233,7 @@ class Chat {
             }
         }
         // BTTV Channel
+        let bttvChannels = this.emoteManager_.getBttvChannels();
         if (bttvChannels.hasOwnProperty(channelLC)) {
             for (let j = 0; j < bttvChannels[channelLC].length; j++) {
                 /* let bttvChannelEmote =
@@ -220,6 +250,7 @@ class Chat {
             }
         }
         // FFZ Channel
+        let ffzChannels = this.emoteManager_.getFfzChannels();
         if (ffzChannels.hasOwnProperty(channelLC)) {
             let ffzChannelId = ffzChannels[channelLC]['room']['_id'];
             if (ffzChannels[channelLC]['sets'][ffzChannelId] != null) {
@@ -238,8 +269,11 @@ class Chat {
             }
         }
     }
-
+    /**
+     * @private
+     */
     addEmoteMenuImgClickAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu img').click(function() {
             let emoteName = $(this).attr('alt');
             let inputField = $('.chatInputField[id$=\'' + channelLC + '\']');
@@ -254,7 +288,11 @@ class Chat {
         });
     }
 
+    /**
+     * @private
+     */
     addEmoteMenuGroupClickAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu .emotes h3')
             .click(/* @this HTMLElement */function() {
                 if ($(this).parent().css('height') === '18px') {
@@ -265,7 +303,11 @@ class Chat {
             });
     }
 
+    /**
+     * @private
+     */
     addEmoteMenuToggleAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
         $('.chatInput[id$=\'' + channelLC + '\'] .kappa').click(function() {
             if ($emoteMenu.is(':hidden')) {
@@ -282,15 +324,22 @@ class Chat {
         });
     }
 
+    /**
+     * @private
+     */
     addEmoteMenuDraggableAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
         let chatArea = $('#main-chat-area');
         $emoteMenu.draggable({
             containment: chatArea,
         });
     }
-
+    /**
+     * @private
+     */
     addEmoteMenuResizableAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         let $emoteMenu = $('.chatInput[id$=\'' + channelLC + '\'] .emoteMenu');
         $emoteMenu.resizable({
             handles: 'n, ne, e',
@@ -298,8 +347,11 @@ class Chat {
             minWidth: 200,
         });
     }
-
+    /**
+     * @private
+     */
     addStreamIframeAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         $(document).on('click', '.toggleStream[id$=\'' + channelLC + '\']',
             /* @this HTMLElement */function() {
                 if ($(this).parent().parent().find('.chatStream').length) {
@@ -331,8 +383,11 @@ class Chat {
                 }
             });
     }
-
+    /**
+     * @private
+     */
     addResizeAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         $(document).on('resize', '.chat[id$=\'' + channelLC + '\']', function() {
             $(this).find('.chatContent')
                 .css({
@@ -369,8 +424,11 @@ class Chat {
             }
         });
     }
-
+    /**
+     * @private
+     */
     addChatterListAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         let toggleVL = 0;
         $(document).on('click', '.toggleViewerlist[id$=\'' + channelLC + '\']', function() {
             // if ($(this).parent().parent().find("div.chatViewerlist")
@@ -445,17 +503,20 @@ class Chat {
             toggleVL++;
         });
     }
-
+    /**
+     * @private
+     */
     addSendMessagesAbility_() {
-        $('.chatInputField[id$=\'' + channelLC + '\']').keydown(function(event) {
+        let channelLC = this.channelName_.toLowerCase();
+        $('.chatInputField[id$=\'' + channelLC + '\']').keydown(this, function(event) {
             if (event.keyCode === 13) {
                 event.preventDefault();
                 if ($(this).val().startsWith('.')
                     || $(this).val().startsWith('/')) {
-                    connection.send('PRIVMSG #' + channelLC + ' :'
+                    event.data.receiveIrcConnection_.send('PRIVMSG #' + channelLC + ' :'
                         + $(this).val());
                 } else {
-                    connectionSend.send('PRIVMSG #' + channelLC
+                    event.data.sendIrcConnection_.send('PRIVMSG #' + channelLC
                         + ' :' + $(this).val());
                 }
                 $(this).val('');
@@ -467,8 +528,11 @@ class Chat {
             }
         });
     }
-
+    /**
+     * @private
+     */
     addNewMessageInfoAbility_() {
+        let channelLC = this.channelName_.toLowerCase();
         $('.chatNewMessagesInfo[id$=\'' + channelLC + '\']').click(function() {
             $(this).hide();
             let $chatContent = $('#' + channelLC + ' .chatContent');

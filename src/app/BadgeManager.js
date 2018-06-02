@@ -11,9 +11,24 @@ class BadgeManager {
      */
     constructor() {
         this.badgesChannels_ = {};
+        // noinspection JSUnusedGlobalSymbols
         this.badgesGlobal_ = null;
 
         this.downloadGlobalBadges_();
+    }
+
+    /**
+     * @return {Object}
+     */
+    getBadgesChannels() {
+        return this.badgesChannels_;
+    }
+
+    /**
+     * @return {Object}
+     */
+    getBadgesGlobal() {
+        return this.badgesGlobal_;
     }
 
     /**
@@ -23,6 +38,7 @@ class BadgeManager {
     downloadGlobalBadges_() {
         // Download Global Badges JSON
         $.ajax({
+            context: this,
             url: (TwitchConstants.GLOBAL_BADGES_API_URL),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
@@ -30,12 +46,19 @@ class BadgeManager {
             },
             async: true,
         }).done(function(data) {
+            // noinspection JSUnusedGlobalSymbols
             this.badgesGlobal_ = data.badge_sets;
         });
     }
+
+    /**
+     * @param {string} channelLC
+     * @param {string} channelId
+     */
     downloadChannelBadges(channelLC, channelId) {
         // Download Channel Badges
         $.ajax({
+            context: this,
             url: ('https://badges.twitch.tv/v1/badges/channels/'
                 + channelId + '/display'),
             headers: {
@@ -44,7 +67,7 @@ class BadgeManager {
             },
             async: true,
         }).done(function(data) {
-            badgesChannels[channelLC] = data.badge_sets;
+            this.badgesChannels_[channelLC] = data.badge_sets;
         });
     }
 }

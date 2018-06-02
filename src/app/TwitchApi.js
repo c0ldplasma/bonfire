@@ -16,7 +16,7 @@ class TwitchApi {
     static getUsers(users, context, callback) {
         $.ajax({
             context: context,
-            url: ('https://api.twitch.tv/kraken/getUsers?login='
+            url: ('https://api.twitch.tv/kraken/users?login='
                 + users),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
@@ -33,7 +33,7 @@ class TwitchApi {
      */
     static getUserFromOAuth(context, callback) {
         $.ajax({
-            context: this,
+            context: context,
             url: ('https://api.twitch.tv/kraken'),
             headers: {
                 'Accept': 'application/vnd.twitchtv.v5+json',
@@ -61,6 +61,7 @@ class TwitchApi {
         }).done(callback);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Gets recent messages from the specified chat
      * @param {string} chatId

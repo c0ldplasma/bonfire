@@ -13,9 +13,9 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
      */
     constructor(appUser, messageParser, chatManager) {
         super(appUser);
-        this.connection_.onmessage = this.onMessage_;
         this.messageParser_ = messageParser;
         this.chatManager_ = chatManager;
+        this.connection_.onmessage = this.onMessage_.bind(this);
     }
 
     /**
@@ -27,14 +27,15 @@ class ReceiveIRCConnection extends TwitchIRCConnection {
 
         for (let i = 0; i < messages.length; i++) {
             let msg = messages[i];
-            console.log(msg);
+            // console.log(msg);
             if (msg.startsWith('PING :tmi.twitch.tv')) {
                 this.connection_.send('PONG :tmi.twitch.tv');
             } else if (msg.length > 1) {
                 let chatMessages = this.messageParser_.parseMessage(msg);
-                this.chatManager_ = this.chatManager_.addMessages(chatMessages);
+                // console.log(chatMessages);
+                this.chatManager_.addMessages(chatMessages);
             } else {
-                console.log('Received empty message in ReceiveIRVConnection onMessage_()');
+                // console.log('Received empty message in ReceiveIRVConnection onMessage_()');
             }
         }
     }

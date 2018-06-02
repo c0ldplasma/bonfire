@@ -19,6 +19,7 @@
 import ChatMessage from './ChatMessage.js';
 import RoomstateMessage from './RoomstateMessage.js';
 import UserMessage from './UserMessage.js';
+import NameColorManager from './NameColorManager.js';
 
 /**
  * Parser for parsing IRC messages sent by Twitch
@@ -26,10 +27,17 @@ import UserMessage from './UserMessage.js';
 class MessageParser {
     /**
      * @param {Object.<NameColorManager>} nameColorManager
+     * @param {EmoteManager} emoteManager
+     * @param {BadgeManager} badgeManager
      * @constructor
      */
-    constructor(nameColorManager) {
+    constructor(nameColorManager, emoteManager, badgeManager) {
+        /** @private */
         this.nameColorManager_ = nameColorManager;
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.badgeManager_ = badgeManager;
     }
 
     /**
@@ -49,7 +57,7 @@ class MessageParser {
         } else if (msgParts[2].startsWith('GLOBALUSERSTATE')) {
             return [];
         } else if (chatName.length < 1) {
-            console.error('Message with no Chat specified: ' + msg);
+            // console.log('Message with no Chat specified: ' + msg);
             return [];
         }
         /** @type {Array.<ChatMessage>} */
@@ -117,7 +125,7 @@ class MessageParser {
         let color = metaInfo.color;
         return [
             new UserMessage(chatName, messageContent, badges,
-                emotePositions, username, color, action),
+                emotePositions, username, color, action, this.emoteManager_, this.badgeManager_),
         ];
     }
 
@@ -128,6 +136,8 @@ class MessageParser {
      * @private
      */
     static parseRoomstate_(msg, chatName) {
+        console.log(chatName.length);
+        console.log(msg);
         let roomstateMsg = msg.split(' ')[0];
         roomstateMsg = roomstateMsg.substring(1, roomstateMsg.length);
         roomstateMsg = roomstateMsg.split(';');
@@ -220,6 +230,7 @@ class MessageParser {
         for (let j = 0; j < msgParts.length; j++) {
             if (msgParts[j].startsWith('#')) {
                 chatName = msgParts[j].slice(1, msgParts[j].length);
+                chatName = chatName.trim();
                 break;
             }
         }
@@ -276,13 +287,13 @@ class MessageParser {
             if (this.nameColorManager_.getUserColors().hasOwnProperty(username)) {
                 metaInfo.color = this.nameColorManager_.getUserColors()[username];
             } else {
-                metaInfo.color = this.nameColorManager_.randomColor();
+                metaInfo.color = NameColorManager.randomColor();
                 this.nameColorManager_.addUserColor(username, metaInfo.color);
             }
         }
 
         // Color contrast correction
-        metaInfo.color = this.nameColorManager_.colorCorrection(metaInfo.color);
+        metaInfo.color = NameColorManager.colorCorrection(metaInfo.color);
 
         return metaInfo;
     }

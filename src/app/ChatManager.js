@@ -7,16 +7,29 @@ import Chat from './Chat.js';
 class ChatManager {
     /**
      * Creates the ChatManager
-     * @param {ReceiveIRCConnection} receiveIrcConnection
-     * @param {SendIRCConnection} sendIrcConnection
+     * @param {EmoteManager} emoteManager
      */
-    constructor(receiveIrcConnection, sendIrcConnection) {
+    constructor(emoteManager) {
         /**
          * @private
          * @type {Object.<string, Chat>}
          */
         this.chatList_ = {};
-        this.receiveIrcConnection_ = receiveIrcConnection;
+        this.emoteManager_ = emoteManager;
+
+        // Bug workaround: unexpected vertical scrolling
+        // despite overflow-y: hidden
+        $('#main-chat-area').scroll(function() {
+            if ($(this).scrollTop() !== 0) {
+                $(this).scrollTop(0);
+            }
+        });
+    }
+
+    setReceiveIrcConnection(receiveIrcConnection) {
+        this.receiveIrcConnection_= receiveIrcConnection;
+    }
+    setSendIrcConnection(sendIrcConnection) {
         this.sendIrcConnection_ = sendIrcConnection;
     }
 
@@ -26,7 +39,7 @@ class ChatManager {
      */
     addMessages(chatMessages) {
         for (let i = 0; i < chatMessages.length; i++) {
-            let chatName = chatMessages[i].getChatName();
+            let chatName = chatMessages[i].getChatName().toLowerCase();
             this.chatList_[chatName].addMessage(chatMessages[i]);
         }
     }
@@ -62,7 +75,8 @@ class ChatManager {
     addChat(channelName) { // ToDo: Restructure this method
         let channelLC = channelName.toLowerCase();
         if (!this.isChatAlreadyAdded(channelLC)) {
-            this.chatList_[channelLC] = new Chat(channelName);
+            this.chatList_[channelLC] = new Chat(channelName, this.emoteManager_,
+                this.receiveIrcConnection_, this.sendIrcConnection_);
             let chatArea = $('#main-chat-area');
             chatArea.append(this.chatList_[channelLC].getHtml());
             this.chatList_[channelLC].addAbilities();
@@ -70,8 +84,10 @@ class ChatManager {
             this.receiveIrcConnection_.joinChat(channelLC);
             this.sendIrcConnection_.joinChat(channelLC);
 
-            $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
-                this.removeChat_(channelName));
+            /* $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
+                this.removeChat_(channelName)); */
+
+            $(document).find('.removeChat#' + channelLC).on('click', this.removeChat_(channelName));
 
             // ToDO: Check if .sortable is needed every time
             chatArea.sortable({

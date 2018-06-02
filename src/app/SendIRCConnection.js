@@ -10,7 +10,7 @@ class SendIRCConnection extends TwitchIRCConnection {
      */
     constructor(appUser) {
         super(appUser);
-        this.connection_.onmessage = this.onMessage_;
+        this.connection_.onmessage = this.onMessage_.bind(this);
     }
 
     /**

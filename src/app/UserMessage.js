@@ -12,9 +12,12 @@ class UserMessage extends ChatMessage {
      * @param {string} chatterName Name of the chatter the message is from
      * @param {string} chatterColor The color of the chatters name in hex #xxxxxx
      * @param {boolean} action
+     * @param {EmoteManager} emoteManager
+     * @param {BadgeManager} badgeManager
      * @constructor
      */
-    constructor(chatName, content, badges, emotePositions, chatterName, chatterColor, action) {
+    constructor(chatName, content, badges, emotePositions, chatterName, chatterColor, action,
+                emoteManager, badgeManager) {
         super(chatName, content);
         /** @private */
         this.badges_ = badges;
@@ -26,16 +29,30 @@ class UserMessage extends ChatMessage {
         this.chatterColor_ = chatterColor;
         /** @private */
         this.action_ = action;
+        /** @private */
+        this.emoteManager_ = emoteManager;
+        /** @private */
+        this.badgeManager_ = badgeManager;
     }
 
+    /**
+     * @return {string} HTML code
+     */
     getHtml() {
         let html = this.replaceTwitchEmotesAndEscapeHtml(this.getContent());
-        html = this.matchURL_(html);
+        html = UserMessage.matchURL_(html);
         html = this.replaceBttvEmotes(html);
         html = this.replaceFfzEmotes(html);
         html = this.replaceBadges(html);
         return html;
     }
+
+    /**
+     * Replace Twitch emote texts with img html tag
+     * and simultaneously escape the HTML chars in the msg
+     * @param {string} userMessage
+     * @return {string}
+     */
     replaceTwitchEmotesAndEscapeHtml(userMessage) {
         // Replace emote texts with images
         if (this.emotes_[0] !== '' && this.emotes_[0] != null) {
@@ -68,7 +85,7 @@ class UserMessage extends ChatMessage {
                 let oldMessage = userMessage;
 
                 let imgString = userMessage.substring(0, oldAfterEmotePos)
-                    + this.escapeString_(userMessage.substring(oldAfterEmotePos,
+                    + UserMessage.escapeString_(userMessage.substring(oldAfterEmotePos,
                         parseInt(sortEmotes[k][0]) + diff)) +
                     '<span style=" display: inline-block;" >&#x200b;' +
                     '<img src=\'https://static-cdn.jtvnw.net/emoticons/v1/'
@@ -83,12 +100,19 @@ class UserMessage extends ChatMessage {
                 diff += userMessage.length - oldMessage.length;
             }
         } else {
-            userMessage = this.escapeString_(userMessage);
+            userMessage = UserMessage.escapeString_(userMessage);
         }
         return userMessage;
     }
+
+    /**
+     * Replaces Bttv emote texts with img html tag
+     * @param {string} userMessage
+     * @return {string}
+     */
     replaceBttvEmotes(userMessage) {
         // Replace BTTV Global Emotes with img
+        let bttvGlobal = this.emoteManager_.getBttvGlobal();
         for (let j = 0; j < bttvGlobal.length; j++) {
             if (bttvGlobal[j].channel == null) {
                 let find = JSON.stringify(bttvGlobal[j].code);
@@ -107,31 +131,39 @@ class UserMessage extends ChatMessage {
             }
         }
         // Replace BTTV Channel Emotes with img
+        let bttvChannels = this.emoteManager_.getBttvChannels();
         if (bttvChannels.hasOwnProperty(this.chatName_)) {
             for (let j = 0; j < bttvChannels[this.chatName_].length; j++) {
                 let find = JSON.stringify(bttvChannels[this.chatName_][j].code);
                 find = find.substring(1, find.length - 1);
-                find = '(^|\\b|\\s)' +
-                    find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&') + '(?=\\s|$)';
+                find = '(^|\\b|\\s)' + find.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&') + '(?=\\s|$)';
 
                 let re = new RegExp(find, 'g');
 
-                let emoteId = JSON.stringify(bttvChannels[this.chatName_][j].id)
+                let emoteId =
+                    JSON.stringify(bttvChannels[this.chatName_][j].id)
                     .substring(1,
-                        JSON.stringify(bttvChannels[this.chatName_][j].id).length
-                        - 1);
+                        JSON.stringify(
+                            bttvChannels[this.chatName_][j].id).length - 1);
                 userMessage = userMessage.replace(re,
                     ' <span style=" display: inline-block;" >&#x200b;' +
                     '<img src=\'https://cdn.betterttv.net/emote/' +
                     emoteId +
-                    '/1x\' alt=\'' + bttvChannels[this.chatName_][j].code + '\' />' +
+                    '/1x\' alt=\'' +
+                    bttvChannels[this.chatName_][j].code + '\' />' +
                     '</span> ');
             }
         }
         return userMessage;
     }
+    /**
+     * Replaces Ffz emote texts with img html tag
+     * @param {string} userMessage
+     * @return {string}
+     */
     replaceFfzEmotes(userMessage) {
         // Replace FFZ Global Emotes with img
+        let ffzGlobal = this.emoteManager_.getFfzGlobal();
         for (let j = 0; j < ffzGlobal.default_sets.length; j++) {
             let emoteSetGlobal = ffzGlobal.default_sets[j];
             let emotesInSetGlobal =
@@ -153,11 +185,12 @@ class UserMessage extends ChatMessage {
             }
         }
         // Replace FFZ Channel Emotes with img
-        if (ffzChannels.hasOwnProperty(channelLC)) {
-            let ffzChannelId = ffzChannels[channelLC]['room']['_id'];
-            if (ffzChannels[channelLC]['sets'][ffzChannelId] != null) {
+        let ffzChannels = this.emoteManager_.getFfzChannels();
+        if (ffzChannels.hasOwnProperty(this.chatName_)) {
+            let ffzChannelId = ffzChannels[this.chatName_]['room']['_id'];
+            if (ffzChannels[this.chatName_]['sets'][ffzChannelId] != null) {
                 let ffzChannelEmoteSet =
-                    ffzChannels[channelLC]['sets'][ffzChannelId]['emoticons'];
+                    ffzChannels[this.chatName_]['sets'][ffzChannelId]['emoticons'];
                 for (let j = 0; j < ffzChannelEmoteSet.length; j++) {
                     let find = JSON.stringify(ffzChannelEmoteSet[j].name);
                     find = find.substring(1, find.length - 1);
@@ -177,6 +210,12 @@ class UserMessage extends ChatMessage {
         }
         return userMessage;
     }
+
+    /**
+     * Puts badges img tags in the message
+     * @param {string} userMessage
+     * @return {string}
+     */
     replaceBadges(userMessage) {
         let newElement;
         if (this.action_) {
@@ -195,7 +234,7 @@ class UserMessage extends ChatMessage {
         // Put badges in message
         for (let j = 0; j < this.badges_.length; j++) {
             let badge = this.badges_[j].split('/');
-            let badgeGroup = badgesChannels[channelLC][badge[0]];
+            let badgeGroup = this.badgeManager_.getBadgesChannels()[this.chatName_][badge[0]];
             if (badge[0].localeCompare('subscriber') === 0) {
                 newElement.find('span:nth-of-type(2):first').before(
                     '<div style=" display: inline-block;' +
@@ -208,7 +247,8 @@ class UserMessage extends ChatMessage {
                     '<div style=" display: inline-block;' +
                     'vertical-align: -32%;border-radius: 2px;' +
                     'background-image: url(' +
-                    badgesGlobal[badge[0]]['versions'][badge[1]]['image_url_1x']
+                    this.badgeManager_
+                        .getBadgesGlobal()[badge[0]]['versions'][badge[1]]['image_url_1x']
                     + ');"></div>');
             }
         }
@@ -222,7 +262,7 @@ class UserMessage extends ChatMessage {
      * @return {string} Text with <a href=""> HTML Tags
      * @private
      */
-    matchURL_(txt) {
+    static matchURL_(txt) {
         let pattern =
             /((^|\s|&#32;)(http(s)?:\/\/.)?(www\.)?([-a-zA-Z0-9@:%_+~#=]|\.(?!\.)){2,256}\.[a-z]{2,8}\b([-a-zA-Z0-9@:%_+.~#?&/=]*))(?=(\s|$|&#32;))/g;
         txt = txt.replace(pattern, function(str, p1) {
@@ -251,7 +291,7 @@ class UserMessage extends ChatMessage {
      * @return {string} escaped message
      * @private
      */
-    escapeString_(txt) {
+    static escapeString_(txt) {
         return txt.replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
             .replace(/`/g, '&#96;').replace(/!/g, '&#33;')

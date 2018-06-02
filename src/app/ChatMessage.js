@@ -14,22 +14,30 @@ class ChatMessage {
         /** @private */
         this.timestamp_ = this.getCurrentTimeFormatted_();
         /** @private */
-        this.content_ = content;
+        this.content_ = content.trim();
         /** @private */
     }
 
+    /**
+     * @return {string}
+     */
     getContent() {
         return this.content_;
     }
-
+    /**
+     * @return {string}
+     */
     getTimestamp() {
         return this.timestamp_;
     }
-
+    /**
+     * @return {string}
+     */
     getChatName() {
         return this.chatName_;
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
      * Returns the current time in 24h format
      * @return {string} time in format HH:MM
@@ -49,7 +57,9 @@ class ChatMessage {
         }
         return time;
     }
-
+    /**
+     * @return {string} HTML Code
+     */
     getHtml() {
         return '<li style="border-top: 1px solid #673ab7;' +
             'border-bottom: 1px solid #673ab7;padding-top: 3px; ' +

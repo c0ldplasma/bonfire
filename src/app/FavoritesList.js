@@ -2,7 +2,7 @@
 
 /**
  * @param data._total
- * @param data.getUsers._id
+ * @param data.users._id
  */
 
 import TwitchApi from './TwitchApi.js';
@@ -22,6 +22,49 @@ class FavoritesList {
         this.badgeManager_ = badgeManager;
         this.emoteManager_ = emoteManager;
         this.chatManager_ = chatManager;
+
+        $('#addFavFromInput').click(this.addFavToList.bind(this));
+        $('#newFavInput').keydown(function(event) {
+            if (event.keyCode === 13) {
+                $('#addFavFromInput').click();
+            }
+        });
+        document.getElementById('channelListToggle').addEventListener('click', this.toggleFavList);
+        this.loadFavoritesFromLocalStorage_();
+    }
+
+    /**
+     * @private
+     */
+    loadFavoritesFromLocalStorage_() {
+        try {
+            let channelsArray = JSON.parse(localStorage.getItem('channels'));
+            if (channelsArray !== null) {
+                let channelCount = 0;
+                let channels = '';
+                for (let i = 0; i < channelsArray.length; i++) {
+                    channels += channelsArray[i] + ',';
+                    channelCount++;
+                    if (channelCount > 99) {
+                        channels = channels.slice(0, -1);
+                        this.addFavToList(channels);
+                        channels = '';
+                        channelCount = 0;
+                    }
+                }
+                if (channels.length > 1) {
+                    channels = channels.slice(0, -1);
+                    this.addFavToList(channels);
+                }
+            } else {
+                let channels = [];
+                localStorage.setItem('channels', JSON.stringify(channels));
+            }
+        } catch (err) {
+            alert('Error: ' + err);
+            let channels = [];
+            localStorage.setItem('channels', JSON.stringify(channels));
+        }
     }
 
     /**
@@ -54,22 +97,26 @@ class FavoritesList {
         if ($.type(channelLC) === 'string') {
             channels = channelLC;
         }
+        // console.log(channels);
         channels = channels.replace(/\s+/g, '');
         let channelsCount = channels.split(',').length;
 
         if (channels.length >= 3) {
+            // console.log(this);
             TwitchApi.getUsers(channels, this, function(data) {
                 let notExistingChannelsCount = channelsCount - data._total;
                 for (let i = 0; i < data._total; i++) {
-                    let channel = data.getUsers[i].display_name;
-                    let channelId = data.getUsers[i]._id;
-                    let profilePicURL = data.getUsers[i].logo;
+                    let channel = data.users[i].display_name;
+                    let channelId = data.users[i]._id;
+                    let profilePicURL = data.users[i].logo;
                     // ToDo: Check if next line is necessary
                     document.getElementById('newFavInput').placeholder = '';
-                    this.addFavLine(channel, profilePicURL, channelId);
+                    // noinspection JSPotentiallyInvalidUsageOfClassThis
+                    this.addFavLine_(channel, profilePicURL, channelId);
                 }
 
                 if (notExistingChannelsCount > 0) {
+                    // noinspection JSPotentiallyInvalidUsageOfClassThis
                     this.showChannelDoesNotExistInfo_(notExistingChannelsCount);
                 }
             });
@@ -119,15 +166,15 @@ class FavoritesList {
                 + '"><input class="favEntryRemoveButton" ' +
                 'id="' + channelLC + '" type="button" ></div>');
 
-            $(document).on('click', this, '.favEntryAddChatButton[id$=\''
-                + channelLC + '\']', function(event) {
-                event.data.chatManager_.addChat(channel, channelId);
+            $(document).on('click', '.favEntryAddChatButton[id$=\''
+                + channelLC + '\']', this, function(event) {
+                event.data.chatManager_.addChat(channel);
             });
 
-            $(document).on('click', this, '.favEntryRemoveButton[id$=\''
-                + channelLC + '\']', function(event) {
+            $(document).on('click', '.favEntryRemoveButton[id$=\'' + channelLC + '\']', this,
+                function(event) {
                     $(this).parent().remove();
-                    event.data.removeChannelFromLocalStorage_(channelId);
+                    event.data.removeChannelFromLocalStorage_(channelLC);
             });
 
             // ToDo: is it needed to do channelList.sortable() every time when an entry is added?
@@ -141,30 +188,32 @@ class FavoritesList {
             });
         }
 
-        this.storeChannelInLocalStorage_(channelId);
+        this.storeChannelInLocalStorage_(channelLC);
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
-     * @param {string} channelId Twitch channel id of the channel that is stored
+     * @param {string} channelName Twitch channel id of the channel that is stored
      * @private
      */
-    storeChannelInLocalStorage_(channelId) {
+    storeChannelInLocalStorage_(channelName) {
         let channels = JSON.parse(localStorage.getItem('channels'));
-        let index = channels.indexOf(channelId);
+        let index = channels.indexOf(channelName);
         if (index > -1) {
             channels.splice(index, 1);
         }
-        channels.push(channelId);
+        channels.push(channelName);
         localStorage.setItem('channels', JSON.stringify(channels));
     }
 
+    // noinspection JSMethodCanBeStatic
     /**
-     * @param {string} channelId Twitch channel id of the channel that gets deleted
+     * @param {string} channelLC Twitch channel id of the channel that gets deleted
      * @private
      */
-    removeChannelFromLocalStorage_(channelId) {
+    removeChannelFromLocalStorage_(channelLC) {
         let channels = JSON.parse(localStorage.getItem('channels'));
-        let index = channels.indexOf(channelId);
+        let index = channels.indexOf(channelLC);
         if (index > -1) {
             channels.splice(index, 1);
         }
