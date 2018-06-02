@@ -544,6 +544,9 @@ class EmoteManager {
     }
 }
 
+/**
+ * Manages the name color for chatters who never set their name color
+ */
 class NameColorManager {
     /**
      * @constructor
@@ -595,7 +598,7 @@ class NameColorManager {
         // Color contrast correction
         let rgbColor = NameColorManager.hex2rgb_(hexColor);
         let yiqColor = NameColorManager.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
-        while (hexColor[0] < 0.5) {
+        while (yiqColor.y < 0.5) {
             rgbColor = NameColorManager.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
             let hslColor = NameColorManager.rgb2hsl_(rgbColor.r, rgbColor.g, rgbColor.b);
             hslColor.l = Math.min(Math.max(0, 0.1 + 0.9 * hslColor.l), 1);
@@ -1084,9 +1087,6 @@ class RoomstateMessage extends ChatMessage {
     }
 }
 
-/**
- * Represents one chat column on the app
- */
 class Chat {
     /**
      * Adds the chat column for channelName to the app
