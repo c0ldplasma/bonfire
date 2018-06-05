@@ -1,9 +1,6 @@
 (function () {
 'use strict';
 
-/**
- * Twitch constants like CLIENT_ID and API-URLs
- */
 class TwitchConstants {
     /**
      * @return {string} Client Id for authorization on the Twitch apis
@@ -121,21 +118,15 @@ class TwitchApi {
      * Gets recent messages from the specified chat
      * @param {string} chatId
      */
-    static getRecentMessages(chatId) {
+    static getRecentMessages(chatId, context, callback) {
         // Download recent messages
         $.ajax({
-            url: ('https://tmi.twitch.tv/api/rooms/' + chatId
-                + '/recent_messages?count=50'),
-            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
-            dataType: 'jsonp',
+            context: context,
+            type: 'GET',
+            url: ('https://chats.c0ldplasma.de/php/recentMessages.php'),
+            data: {chatId: chatId},
             async: true,
-        }).done(function(data) {
-            console.log(data);
-            let recentMessages = data.messages;
-            for (let j = 0; j < recentMessages.length; j++) {
-                //
-            }
-        });
+        }).done(callback);
     }
 }
 
@@ -951,7 +942,7 @@ class FavoritesList {
 
             $(document).on('click', '.favEntryAddChatButton[id$=\''
                 + channelLC + '\']', this, function(event) {
-                event.data.chatManager_.addChat(channel);
+                event.data.chatManager_.addChat(channel, channelId);
             });
 
             $(document).on('click', '.favEntryRemoveButton[id$=\'' + channelLC + '\']', this,
@@ -1090,18 +1081,24 @@ class RoomstateMessage extends ChatMessage {
     }
 }
 
+/**
+ * Represents one chat column on the app
+ */
 class Chat {
     /**
      * Adds the chat column for channelName to the app
      *
      * @param {string} channelName Name of the channel
+     * @param {string} channelId
      * @param {EmoteManager} emoteManager
      * @param {ReceiveIRCConnection} receiveIrcConnection
      * @param {SendIRCConnection} sendIrcConnection
      */
-    constructor(channelName, emoteManager, receiveIrcConnection, sendIrcConnection) {
+    constructor(channelName, channelId, emoteManager, receiveIrcConnection, sendIrcConnection, messageParser) {
         /** @private */
         this.channelName_ = channelName;
+        /** @private */
+        this.channelId_ = channelId;
         /** @private */
         this.channelNameLC_ = channelName.toLowerCase();
         /** @private */
@@ -1110,6 +1107,8 @@ class Chat {
         this.receiveIrcConnection_ = receiveIrcConnection;
         /** @private */
         this.sendIrcConnection_ = sendIrcConnection;
+        /** @private */
+        this.messageParser_ = messageParser;
         /** @private */
         this.messageCount_ = 0;
         /** @private */
@@ -1120,6 +1119,8 @@ class Chat {
         /** @private
          *  @const */
         this.MESSAGES_IN_CONTAINER_ = 100;
+
+        this.loadRecentMessages_();
     }
 
     /**
@@ -1145,6 +1146,22 @@ class Chat {
             this.hideNotVisibleMessages();
             this.correctScrollPosition_();
         }
+    }
+
+    /**
+     * Downloads recent chat messages and adds them to the chat
+     * @private
+     */
+    loadRecentMessages_() {
+        TwitchApi.getRecentMessages(this.channelId_, this, function(data) {
+            let recentMessages = JSON.parse(data).messages;
+            for (let j = 0; j < recentMessages.length; j++) {
+                let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
+                for (let i = 0; i < chatMessages.length; i++) {
+                    this.addMessage(chatMessages[i]);
+                }
+            }
+        });
     }
 
     /**
@@ -1650,14 +1667,16 @@ class ChatManager {
     /**
      * Creates the ChatManager
      * @param {EmoteManager} emoteManager
+     * @param {MessageParser} messageParser
      */
-    constructor(emoteManager) {
+    constructor(emoteManager, messageParser) {
         /**
          * @private
          * @type {Object.<string, Chat>}
          */
         this.chatList_ = {};
         this.emoteManager_ = emoteManager;
+        this.messageParser_ = messageParser;
 
         // Bug workaround: unexpected vertical scrolling
         // despite overflow-y: hidden
@@ -1714,12 +1733,13 @@ class ChatManager {
      * Creates new Chat and adds it to the chatList_ if there is not already
      * a chat with this channelName
      * @param {string} channelName Name of the channel that will be added
+     * @param {string} channelId
      */
-    addChat(channelName) { // ToDo: Restructure this method
+    addChat(channelName, channelId) {
         let channelLC = channelName.toLowerCase();
         if (!this.isChatAlreadyAdded(channelLC)) {
-            this.chatList_[channelLC] = new Chat(channelName, this.emoteManager_,
-                this.receiveIrcConnection_, this.sendIrcConnection_);
+            this.chatList_[channelLC] = new Chat(channelName, channelId, this.emoteManager_,
+                this.receiveIrcConnection_, this.sendIrcConnection_, this.messageParser_);
             let chatArea = $('#main-chat-area');
             chatArea.append(this.chatList_[channelLC].getHtml());
             this.chatList_[channelLC].addAbilities();
@@ -2392,15 +2412,17 @@ class App {
         /** @private */
         this.emoteManager_ = new EmoteManager(this.appUser_);
         /** @private */
-        this.chatManager_ = new ChatManager(this.emoteManager_);
+        this.messageParser_ =
+            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_);
+        /** @private */
+        this.chatManager_ = new ChatManager(this.emoteManager_, this.messageParser_);
         /** @private */
         new FavoritesList(this.badgeManager_, this.emoteManager_, this.chatManager_);
         /** @private */
         this.sendIrcConnection_ = new SendIRCConnection(this.appUser_);
         /** @private */
         this.receiveIrcConnection_ = new ReceiveIRCConnection(this.appUser_,
-            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_),
-            this.chatManager_);
+            this.messageParser_, this.chatManager_);
         this.chatManager_.setReceiveIrcConnection(this.receiveIrcConnection_);
         this.chatManager_.setSendIrcConnection(this.sendIrcConnection_);
     }

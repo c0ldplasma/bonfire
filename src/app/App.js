@@ -36,15 +36,17 @@ class App {
         /** @private */
         this.emoteManager_ = new EmoteManager(this.appUser_);
         /** @private */
-        this.chatManager_ = new ChatManager(this.emoteManager_);
+        this.messageParser_ =
+            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_);
+        /** @private */
+        this.chatManager_ = new ChatManager(this.emoteManager_, this.messageParser_);
         /** @private */
         new FavoritesList(this.badgeManager_, this.emoteManager_, this.chatManager_);
         /** @private */
         this.sendIrcConnection_ = new SendIRCConnection(this.appUser_);
         /** @private */
         this.receiveIrcConnection_ = new ReceiveIRCConnection(this.appUser_,
-            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_),
-            this.chatManager_);
+            this.messageParser_, this.chatManager_);
         this.chatManager_.setReceiveIrcConnection(this.receiveIrcConnection_);
         this.chatManager_.setSendIrcConnection(this.sendIrcConnection_);
     }

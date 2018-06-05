@@ -153,7 +153,7 @@ class FavoritesList {
 
             $(document).on('click', '.favEntryAddChatButton[id$=\''
                 + channelLC + '\']', this, function(event) {
-                event.data.chatManager_.addChat(channel);
+                event.data.chatManager_.addChat(channel, channelId);
             });
 
             $(document).on('click', '.favEntryRemoveButton[id$=\'' + channelLC + '\']', this,

@@ -70,21 +70,15 @@ class TwitchApi {
      * Gets recent messages from the specified chat
      * @param {string} chatId
      */
-    static getRecentMessages(chatId) {
+    static getRecentMessages(chatId, context, callback) {
         // Download recent messages
         $.ajax({
-            url: ('https://tmi.twitch.tv/api/rooms/' + chatId
-                + '/recent_messages?count=50'),
-            headers: {'Accept': 'application/vnd.twitchtv.v5+json'},
-            dataType: 'jsonp',
+            context: context,
+            type: 'GET',
+            url: ('https://chats.c0ldplasma.de/php/recentMessages.php'),
+            data: {chatId: chatId},
             async: true,
-        }).done(function(data) {
-            console.log(data);
-            let recentMessages = data.messages;
-            for (let j = 0; j < recentMessages.length; j++) {
-                //
-            }
-        });
+        }).done(callback);
     }
 }
 

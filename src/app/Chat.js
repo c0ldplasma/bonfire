@@ -9,13 +9,16 @@ class Chat {
      * Adds the chat column for channelName to the app
      *
      * @param {string} channelName Name of the channel
+     * @param {string} channelId
      * @param {EmoteManager} emoteManager
      * @param {ReceiveIRCConnection} receiveIrcConnection
      * @param {SendIRCConnection} sendIrcConnection
      */
-    constructor(channelName, emoteManager, receiveIrcConnection, sendIrcConnection) {
+    constructor(channelName, channelId, emoteManager, receiveIrcConnection, sendIrcConnection, messageParser) {
         /** @private */
         this.channelName_ = channelName;
+        /** @private */
+        this.channelId_ = channelId;
         /** @private */
         this.channelNameLC_ = channelName.toLowerCase();
         /** @private */
@@ -24,6 +27,8 @@ class Chat {
         this.receiveIrcConnection_ = receiveIrcConnection;
         /** @private */
         this.sendIrcConnection_ = sendIrcConnection;
+        /** @private */
+        this.messageParser_ = messageParser;
         /** @private */
         this.messageCount_ = 0;
         /** @private */
@@ -34,6 +39,8 @@ class Chat {
         /** @private
          *  @const */
         this.MESSAGES_IN_CONTAINER_ = 100;
+
+        this.loadRecentMessages_();
     }
 
     /**
@@ -59,6 +66,22 @@ class Chat {
             this.hideNotVisibleMessages();
             this.correctScrollPosition_();
         }
+    }
+
+    /**
+     * Downloads recent chat messages and adds them to the chat
+     * @private
+     */
+    loadRecentMessages_() {
+        TwitchApi.getRecentMessages(this.channelId_, this, function(data) {
+            let recentMessages = JSON.parse(data).messages;
+            for (let j = 0; j < recentMessages.length; j++) {
+                let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
+                for (let i = 0; i < chatMessages.length; i++) {
+                    this.addMessage(chatMessages[i]);
+                }
+            }
+        });
     }
 
     /**

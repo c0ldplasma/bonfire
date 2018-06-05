@@ -8,14 +8,16 @@ class ChatManager {
     /**
      * Creates the ChatManager
      * @param {EmoteManager} emoteManager
+     * @param {MessageParser} messageParser
      */
-    constructor(emoteManager) {
+    constructor(emoteManager, messageParser) {
         /**
          * @private
          * @type {Object.<string, Chat>}
          */
         this.chatList_ = {};
         this.emoteManager_ = emoteManager;
+        this.messageParser_ = messageParser;
 
         // Bug workaround: unexpected vertical scrolling
         // despite overflow-y: hidden
@@ -72,12 +74,13 @@ class ChatManager {
      * Creates new Chat and adds it to the chatList_ if there is not already
      * a chat with this channelName
      * @param {string} channelName Name of the channel that will be added
+     * @param {string} channelId
      */
-    addChat(channelName) { // ToDo: Restructure this method
+    addChat(channelName, channelId) {
         let channelLC = channelName.toLowerCase();
         if (!this.isChatAlreadyAdded(channelLC)) {
-            this.chatList_[channelLC] = new Chat(channelName, this.emoteManager_,
-                this.receiveIrcConnection_, this.sendIrcConnection_);
+            this.chatList_[channelLC] = new Chat(channelName, channelId, this.emoteManager_,
+                this.receiveIrcConnection_, this.sendIrcConnection_, this.messageParser_);
             let chatArea = $('#main-chat-area');
             chatArea.append(this.chatList_[channelLC].getHtml());
             this.chatList_[channelLC].addAbilities();
