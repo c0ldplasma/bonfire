@@ -22,13 +22,16 @@
       <w>onopen</w>
       <w>pkgd</w>
       <w>privmsg</w>
+      <w>punkt</w>
       <w>resub</w>
       <w>roomstate</w>
       <w>sctrict</w>
       <w>seperated</w>
+      <w>simplebar</w>
       <w>thiss</w>
       <w>tlnecfrtl</w>
       <w>twitchtv</w>
+      <w>unpkg</w>
       <w>usernames</w>
       <w>usernotice</w>
       <w>userstate</w>

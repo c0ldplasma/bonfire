@@ -26,14 +26,11 @@ import NameColorManager from './NameColorManager.js';
  */
 class MessageParser {
     /**
-     * @param {Object.<NameColorManager>} nameColorManager
      * @param {EmoteManager} emoteManager
      * @param {BadgeManager} badgeManager
      * @constructor
      */
-    constructor(nameColorManager, emoteManager, badgeManager) {
-        /** @private */
-        this.nameColorManager_ = nameColorManager;
+    constructor(emoteManager, badgeManager) {
         /** @private */
         this.emoteManager_ = emoteManager;
         /** @private */
@@ -260,12 +257,12 @@ class MessageParser {
             if (info[0].localeCompare('color') === 0) {
                 metaInfo.color = info[1];
                 if (metaInfo.color.localeCompare('') === 0
-                    && !(this.nameColorManager_.getUserColors().hasOwnProperty(username))) {
-                    metaInfo.color = this.nameColorManager_.randomColor();
-                    this.nameColorManager_.addUserColor(username, metaInfo.color);
+                    && !(NameColorManager.getUserColors().hasOwnProperty(username))) {
+                    metaInfo.color = NameColorManager.randomColor();
+                    NameColorManager.addUserColor(username, metaInfo.color);
                 } else if (metaInfo.color.localeCompare('') === 0
-                    && this.nameColorManager_.getUserColors().hasOwnProperty(username)) {
-                    metaInfo.color = this.nameColorManager_.getUserColors()[username];
+                    && NameColorManager.getUserColors().hasOwnProperty(username)) {
+                    metaInfo.color = NameColorManager.getUserColors()[username];
                 }
                 gotColor = true;
             } else if (info[0].localeCompare('display-name') === 0) {
@@ -282,11 +279,11 @@ class MessageParser {
         }
 
         if (!gotColor) {
-            if (this.nameColorManager_.getUserColors().hasOwnProperty(username)) {
-                metaInfo.color = this.nameColorManager_.getUserColors()[username];
+            if (NameColorManager.getUserColors().hasOwnProperty(username)) {
+                metaInfo.color = NameColorManager.getUserColors()[username];
             } else {
                 metaInfo.color = NameColorManager.randomColor();
-                this.nameColorManager_.addUserColor(username, metaInfo.color);
+                NameColorManager.addUserColor(username, metaInfo.color);
             }
         }
 

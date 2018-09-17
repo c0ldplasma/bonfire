@@ -12,7 +12,6 @@ import SendIRCConnection from './SendIRCConnection.js';
 import ReceiveIRCConnection from './ReceiveIRCConnection.js';
 import BadgeManager from './BadgeManager.js';
 import EmoteManager from './EmoteManager.js';
-import NameColorManager from './NameColorManager.js';
 import FavoritesList from './FavoritesList.js';
 import ChatManager from './ChatManager.js';
 import MessageParser from './MessageParser.js';
@@ -26,18 +25,25 @@ class App {
      * @constructor
      */
     constructor() {
+        // noinspection JSIgnoredPromiseFromCall
+        this.createApp();
+    }
+
+    /**
+     * Create the app
+     */
+    async createApp() {
         document.title += ` ${version}`;
         /** @private */
         this.appUser_ = new AppUser();
-        /** @private */
-        this.nameColorManager_ = new NameColorManager();
+        await this.appUser_.requestAppUserData();
         /** @private */
         this.badgeManager_ = new BadgeManager();
         /** @private */
         this.emoteManager_ = new EmoteManager(this.appUser_);
         /** @private */
         this.messageParser_ =
-            new MessageParser(this.nameColorManager_, this.emoteManager_, this.badgeManager_);
+            new MessageParser(this.emoteManager_, this.badgeManager_);
         /** @private */
         this.chatManager_ = new ChatManager(this.emoteManager_, this.messageParser_);
         /** @private */

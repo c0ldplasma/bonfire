@@ -18,7 +18,7 @@ class TwitchIRCConnection {
             throw new TypeError('Cannot construct abstract instances ' +
                 'of TwitchIRCConnection directly');
         }
-
+        this.isLoaded_ = false;
         this.connection_ = new WebSocket(TwitchConstants.WEBSOCKET_URL);
         this.connection_.onopen = this.onOpen_.bind(this);
         this.connection_.onerror = TwitchIRCConnection.onError_.bind(this);
@@ -34,6 +34,14 @@ class TwitchIRCConnection {
         this.connection_.send('CAP REQ :twitch.tv/commands');
         this.connection_.send('PASS oauth:' + localStorage.accessToken);
         this.connection_.send('NICK ' + this.appUser_.getUserName());
+        this.isLoaded_ = true;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    isLoaded() {
+        return this.isLoaded_;
     }
 
     /**

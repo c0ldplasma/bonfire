@@ -13,8 +13,10 @@ class Chat {
      * @param {EmoteManager} emoteManager
      * @param {ReceiveIRCConnection} receiveIrcConnection
      * @param {SendIRCConnection} sendIrcConnection
+     * @param {MessageParser} messageParser
      */
-    constructor(channelName, channelId, emoteManager, receiveIrcConnection, sendIrcConnection, messageParser) {
+    constructor(channelName, channelId, emoteManager, receiveIrcConnection, sendIrcConnection,
+                messageParser) {
         /** @private */
         this.channelName_ = channelName;
         /** @private */
@@ -158,7 +160,7 @@ class Chat {
     getHtml() {
         let channelLC = this.channelName_.toLowerCase();
         return '<div class="chat" id="' + channelLC + '">' +
-            '<div class="chatHeader" id="' + channelLC + '">' +
+            '<div class="chatHeader" >' +
             '<button class="toggleViewerlist" id="' + channelLC + '"></button>' +
             '<span>' + this.channelName_ + '</span>' +
             '<button class="removeChat" id="' + channelLC + '"></button>' +
@@ -185,7 +187,8 @@ class Chat {
             '<div class="ffzChannelEmotes" style="width: 100%;">' +
             '<h3>FFZ Channel Emotes</h3></div>' +
             '</div></div></div>'
-            + '<div class="chatViewerlist" id="' + channelLC + '"></div>';
+            + '<div class="chatViewerlist" id="' + channelLC + '">' +
+            '</div></div>';
     }
 
     /**

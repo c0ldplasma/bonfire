@@ -28,24 +28,22 @@ class TwitchApi {
 
     /**
      * Gets the data to the user the OAuth token is from
-     * @param {object} context sets the Object 'this' is referring to in the callback function
-     * @param {function} callback function(data) that gets called after the request finished
+     * @return {data}
      */
-    static getUserFromOAuth(context, callback) {
-        $.ajax({
+    static async getUserFromOAuth() {
+        const data = await $.ajax({
             statusCode: {
                 401: function() {
                     window.location.replace(TwitchConstants.AUTHORIZE_URL);
                 },
             },
-            context: context,
             url: ('https://id.twitch.tv/oauth2/validate'),
             dataType: 'json',
             headers: {
                 'Authorization': ('OAuth ' + localStorage.accessToken),
             },
-            async: false,
-        }).done(callback);
+        });
+        return data;
     }
 
     /**
@@ -69,6 +67,8 @@ class TwitchApi {
     /**
      * Gets recent messages from the specified chat
      * @param {string} chatId
+     * @param {object} context sets the Object 'this' is referring to in the callback function
+     * @param {function} callback function(data) that gets called after the request finished
      */
     static getRecentMessages(chatId, context, callback) {
         // Download recent messages

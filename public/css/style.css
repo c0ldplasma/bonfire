@@ -1,15 +1,5 @@
-::-webkit-scrollbar {
-    width: 5px;
-	height: 15px;
-}
-
-::-webkit-scrollbar-track {
-	background-color: rgba(0,0,0,0);
-}
-
-::-webkit-scrollbar-thumb {
-	background-color: #444;
-	z-index: 1000;
+::-webkit-scrollbar { /* for Mac OS X support of baron scrollbar*/
+    width: 0;
 }
 .ui-resizable-helper {
     background-color: #292438;
@@ -101,11 +91,12 @@ html, body {
 	height: 35px;
 	background-color: #201c2b;
 	text-align: center;
-	vertical-align: middle;
+	//vertical-align: middle;
 	line-height: 35px;
 	font-size: 15px;
 	white-space: normal;
 	user-select: none;
+    //position: static;
 }
 .chatHeader span {
 	cursor: default;
@@ -153,21 +144,18 @@ html, body {
 	opacity: 1.0;
 }
 #main-chat-area .chat .chatContent {
-	width: 100%;
-	height: calc(100% - 105px);
-	overflow-x: hidden;
-	overflow-y: hidden;
+    width: 100%;
+    height: calc(100% - 105px);
+    overflow: auto;
 }
 #main-chat-area .chat .chatContent:hover {
-	overflow-y: overlay;
 }
 .chatMessageList {
 	min-width: 100%;
 	min-height: 100%;
 	height: auto;
 	word-wrap: break-word;
-	overflow-wrap: break-word;
-	overflow-x: hidden;
+	//overflow-wrap: break-word;
 }
 .chatMessageList li {
 	width: 100%;
@@ -175,10 +163,7 @@ html, body {
 	overflow-wrap: break-word;
 	font-size: 13px;
 	line-height: 135%;
-	padding-left: 7px;
-    padding-right: 7px;
-	padding-bottom: 3.5px;
-	padding-top: 3.5px;
+    padding: 3px 7px 3px 7px;
     display: block;
     white-space: normal;
 	color: #acacbf;
@@ -242,7 +227,6 @@ html, body {
 	padding: 5px;
 	padding-right: 7px;
 	text-align: center;
-	//overflow-y: scroll;
 }
 .emoteMenu .emotes {
 	overflow-y: scroll;
@@ -291,7 +275,7 @@ html, body {
 	margin-left: 10px;
 	margin-top: 4px;
 	padding: 5px;
-  padding-left: 2px;
+    padding-left: 2px;
 	padding-right: 30px;
 	font-size: 14px;
 	color: #eee;

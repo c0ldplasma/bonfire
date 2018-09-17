@@ -3,20 +3,15 @@
 /**
  * Manages the name color for chatters who never set their name color
  */
-class NameColorManager {
-    /**
-     * @constructor
-     */
-    constructor() {
-        this.userColors_ = {};
-    }
+export default {
+    userColors_: {},
 
     /**
      * @return {Object.<string, string>}
      */
     getUserColors() {
         return this.userColors_;
-    }
+    },
 
     /**
      * @param {string} username
@@ -24,13 +19,13 @@ class NameColorManager {
      */
     addUserColor(username, color) {
         this.userColors_[username] = color;
-    }
+    },
 
     /**
      * Returns a random color of the Twitch standard name colors
      * @return {string} Random color as hex #xxxxxx
      */
-    static randomColor() {
+    randomColor() {
         let colorChoices = [
             '#ff0000', '#ff4500',
             '#ff69b4', '#0000ff',
@@ -43,28 +38,28 @@ class NameColorManager {
         ];
         let randomNumber = Math.floor(Math.random() * colorChoices.length);
         return colorChoices[randomNumber];
-    }
+    },
 
     /**
      * Does correct the name color for dark backgrounds, so they are better readable
      * @param {string} hexColor to be corrected as #xxxxxx hex value
      * @return {string} corrected color as #xxxxxx hex value
      */
-    static colorCorrection(hexColor) {
+    colorCorrection(hexColor) {
         // Color contrast correction
-        let rgbColor = NameColorManager.hex2rgb_(hexColor);
-        let yiqColor = NameColorManager.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
+        let rgbColor = this.hex2rgb_(hexColor);
+        let yiqColor = this.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
         while (yiqColor.y < 0.5) {
-            rgbColor = NameColorManager.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
-            let hslColor = NameColorManager.rgb2hsl_(rgbColor.r, rgbColor.g, rgbColor.b);
+            rgbColor = this.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
+            let hslColor = this.rgb2hsl_(rgbColor.r, rgbColor.g, rgbColor.b);
             hslColor.l = Math.min(Math.max(0, 0.1 + 0.9 * hslColor.l), 1);
-            rgbColor = NameColorManager.hsl2rgb_(hslColor.h, hslColor.s, hslColor.l);
-            yiqColor = NameColorManager.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
+            rgbColor = this.hsl2rgb_(hslColor.h, hslColor.s, hslColor.l);
+            yiqColor = this.rgb2yiq_(rgbColor.r, rgbColor.g, rgbColor.b);
         }
-        rgbColor = NameColorManager.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
-        hexColor = NameColorManager.rgb2hex_(rgbColor.r, rgbColor.g, rgbColor.b);
+        rgbColor = this.yiq2rgb_(yiqColor.y, yiqColor.i, yiqColor.q);
+        hexColor = this.rgb2hex_(rgbColor.r, rgbColor.g, rgbColor.b);
         return hexColor.substring(0, 7);
-    }
+    },
 
     /**
      * Converts (r,g,b) to #xxxxxx hex color
@@ -74,9 +69,9 @@ class NameColorManager {
      * @return {string} color as #xxxxxx hex value
      * @private
      */
-    static rgb2hex_(r, g, b) {
+    rgb2hex_(r, g, b) {
         return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-    }
+    },
 
     /**
      * Converts a #xxxxxx hex color to a rgb color
@@ -84,14 +79,14 @@ class NameColorManager {
      * @return {{r: number, g: number, b: number}} r, g, b: 0-255
      * @private
      */
-    static hex2rgb_(hex) {
+    hex2rgb_(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16),
         } : null;
-    }
+    },
 
     /**
      * Converts a rgb color to a yiq color
@@ -101,7 +96,7 @@ class NameColorManager {
      * @return {{y: number, i: number, q: number}} y, i and q between 0.0 and 1.0
      * @private
      */
-    static rgb2yiq_(r, g, b) {
+    rgb2yiq_(r, g, b) {
         // matrix transform
         let y = ((0.299 * r) + (0.587 * g) + (0.114 * b)) / 255;
         let i = ((0.596 * r) + (-0.275 * g) + (-0.321 * b)) / 255;
@@ -111,7 +106,7 @@ class NameColorManager {
             i: i,
             q: q,
         };
-    }
+    },
 
     /**
      * Converts a yiq color to a rgb color
@@ -121,7 +116,7 @@ class NameColorManager {
      * @return {{r: number, g: number, b: number}} r, g, b: 0-255
      * @private
      */
-    static yiq2rgb_(y, i, q) {
+    yiq2rgb_(y, i, q) {
         // matrix transform
         let r = (y + (0.956 * i) + (0.621 * q)) * 255;
         let g = (y + (-0.272 * i) + (-0.647 * q)) * 255;
@@ -147,7 +142,7 @@ class NameColorManager {
             g: g,
             b: b,
         };
-    }
+    },
 
     /**
      * Converts a rgb color to a hsl color
@@ -157,7 +152,7 @@ class NameColorManager {
      * @return {{h: number, s: number, l: number}} h: 0-360, s: 0.0-1.0, l: 0.0-1.0
      * @private
      */
-    static rgb2hsl_(r, g, b) {
+    rgb2hsl_(r, g, b) {
         r /= 255;
         g /= 255;
         b /= 255;
@@ -194,7 +189,7 @@ class NameColorManager {
             s: s,
             l: l,
         };
-    }
+    },
 
     /**
      * Converts an hsl color to a rgb color
@@ -204,7 +199,7 @@ class NameColorManager {
      * @return {{r: number, g: number, b: number}} r, g, b: 0-255
      * @private
      */
-    static hsl2rgb_(h, s, l) {
+    hsl2rgb_(h, s, l) {
         // based on algorithm from http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
         if ( h === undefined ) {
             return {
@@ -259,6 +254,6 @@ class NameColorManager {
             g: Math.round(green * 255),
             b: Math.round(blue * 255),
         };
-    }
-}
-export default NameColorManager;
+    },
+};
+

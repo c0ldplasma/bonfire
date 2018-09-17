@@ -3,7 +3,6 @@
  * @param data.token.user_id
  */
 'use strict';
-import TwitchConstants from './TwitchConstants.js';
 import TwitchApi from './TwitchApi.js';
 /**
  * Represents the User of the chat client
@@ -21,8 +20,6 @@ class AppUser {
         // noinspection JSUnusedGlobalSymbols
         /** @private */
         this.userId_ = '';
-
-        this.requestAppUserData();
     }
 
     /**
@@ -42,9 +39,10 @@ class AppUser {
 
     /**
      * Sends an ajax request to twitch to receive userName_ and userId_ of the AppUser
+     * @return {Promise}
      */
-    requestAppUserData() {
-        TwitchApi.getUserFromOAuth(this, function(data) {
+    async requestAppUserData() {
+        return await TwitchApi.getUserFromOAuth().then((data) => {
             console.log(data);
             if (typeof(data.login) !== 'undefined') {
                 this.userName_ = data.login;

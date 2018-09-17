@@ -1,5 +1,6 @@
 'use strict';
 import Chat from './Chat.js';
+//import SimpleBar from '../../public/lib/simplebar.js';
 
 /**
  * Represents the whole application
@@ -78,7 +79,8 @@ class ChatManager {
      */
     addChat(channelName, channelId) {
         let channelLC = channelName.toLowerCase();
-        if (!this.isChatAlreadyAdded(channelLC)) {
+        if (!this.isChatAlreadyAdded(channelLC) && this.receiveIrcConnection_.isLoaded() &&
+                this.sendIrcConnection_.isLoaded()) {
             this.chatList_[channelLC] = new Chat(channelName, channelId, this.emoteManager_,
                 this.receiveIrcConnection_, this.sendIrcConnection_, this.messageParser_);
             let chatArea = $('#main-chat-area');
@@ -90,6 +92,8 @@ class ChatManager {
 
             $(document).on('click', '.removeChat[id$=\'' + channelLC + '\']',
                 [this, channelName], this.removeChat_);
+
+            baron('#' + channelLC + 'scrollArea');
 
             // ToDO: Check if .sortable is needed every time
             chatArea.sortable({
