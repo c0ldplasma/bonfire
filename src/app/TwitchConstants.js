@@ -9,6 +9,7 @@ class TwitchConstants {
      * @constructor
      */
     static get CLIENT_ID() {
+        // noinspection SpellCheckingInspection
         return 'xllef7inid2mbeqoaj2o6bsohg7pz7';
     }
 

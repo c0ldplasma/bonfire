@@ -1,5 +1,5 @@
 import TwitchApi from './TwitchApi.js';
-import RoomstateMessage from './RoomstateMessage.js';
+import RoomStateMessage from './RoomStateMessage.js';
 
 /**
  * Represents one chat column on the app
@@ -49,7 +49,7 @@ class Chat {
      * @param {Object.<ChatMessage>} chatMessage
      */
     addMessage(chatMessage) {
-        if (chatMessage instanceof RoomstateMessage) {
+        if (chatMessage instanceof RoomStateMessage) {
             let chatInput = $('.chatInput#' + chatMessage.getChatName().toLowerCase());
             chatInput.append(chatMessage.getHtml());
         } else {
@@ -76,10 +76,12 @@ class Chat {
      */
     loadRecentMessages_() {
         TwitchApi.getRecentMessages(this.channelId_, this, function(data) {
+            console.log(data);
             let recentMessages = JSON.parse(data).messages;
             for (let j = 0; j < recentMessages.length; j++) {
                 let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
                 for (let i = 0; i < chatMessages.length; i++) {
+                    // noinspection JSPotentiallyInvalidUsageOfClassThis
                     this.addMessage(chatMessages[i]);
                 }
             }
@@ -159,36 +161,34 @@ class Chat {
      */
     getHtml() {
         let channelLC = this.channelName_.toLowerCase();
-        return '<div class="chat" id="' + channelLC + '">' +
-            '<div class="chatHeader" >' +
-            '<button class="toggleViewerlist" id="' + channelLC + '"></button>' +
-            '<span>' + this.channelName_ + '</span>' +
-            '<button class="removeChat" id="' + channelLC + '"></button>' +
-            '<button class="toggleStream" id="' + channelLC + '"></button>' +
-            '</div>' +
-            '<div class="chatContent" id="' + channelLC + 'scrollArea">' +
-            '<div class="chatMessageList" id="' + channelLC + 'contentArea">' +
-            '</div></div>' +
-            '<div class="chatInput" id="' + channelLC + '">' +
-            '<div class="chatNewMessagesInfo" id="' + channelLC + '">' +
-            'More messages below.</div>' +
-            '<img class="kappa" src="/img/Kappa.png" />' +
-            '<textarea maxlength="500" class="chatInputField" id="'
-            + channelLC +
-            '" placeholder="Send a message..."></textarea>' +
-            '<div class="emoteMenu">' +
-            '<div class="emotes">' +
-            '<div class="bttvEmotes" style="width: 100%;">' +
-            '<h3>BTTV Emotes</h3></div>' +
-            '<div class="bttvChannelEmotes" style="width: 100%;">' +
-            '<h3>BTTV Channel Emotes</h3></div>' +
-            '<div class="ffzEmotes" style="width: 100%;">' +
-            '<h3>FFZ Emotes</h3></div>' +
-            '<div class="ffzChannelEmotes" style="width: 100%;">' +
-            '<h3>FFZ Channel Emotes</h3></div>' +
-            '</div></div></div>'
-            + '<div class="chatViewerlist" id="' + channelLC + '">' +
-            '</div></div>';
+        return `<div class="chat" id="${channelLC}">
+        <div class="chatHeader">
+        <button class="toggleViewerList" id="${channelLC}"></button>
+        <span>${this.channelName_}</span>
+        <button class="removeChat" id="${channelLC}"></button>
+        <button class="toggleStream" id="${channelLC}"></button>
+        </div>
+        <div class="chatContent" id="${channelLC}scrollArea">
+        <div class="chatMessageList" id="${channelLC}contentArea"></div>
+        </div>
+        <div class="chatInput" id="${channelLC}">
+        <div class="chatNewMessagesInfo" id="${channelLC}">More messages below.</div>
+        <img class="kappa" src="/img/Kappa.png" alt="E"/><textarea maxlength="500"
+        class="chatInputField"
+        id="${channelLC}"
+        placeholder="Send a message..."></textarea>
+        <div class="emoteMenu">
+        <div class="emotes">
+        <div class="bttvEmotes" style="width: 100%;"><h3>BTTV Emotes</h3></div>
+        <div class="bttvChannelEmotes" style="width: 100%;"><h3>BTTV Channel Emotes</h3>
+        </div>
+        <div class="ffzEmotes" style="width: 100%;"><h3>FFZ Emotes</h3></div>
+        <div class="ffzChannelEmotes" style="width: 100%;"><h3>FFZ Channel Emotes</h3></div>
+        </div>
+        </div>
+        </div>
+        <div class="chatViewerList" id="${channelLC}"></div>
+        </div>`;
     }
 
     /**
@@ -382,7 +382,7 @@ class Chat {
                     $(this).parent().parent().find('.chatStream').remove();
                     $(this).parent().parent().find('.chatContent')
                         .css({'height': 'calc(100% - 105px)'});
-                    $(this).parent().parent().find('.chatViewerlist')
+                    $(this).parent().parent().find('.chatViewerList')
                         .css({'height': 'calc(100% - 35px)'});
                 } else {
                     $(this).parent().parent().prepend(
@@ -398,7 +398,7 @@ class Chat {
                             $(this).parent().parent()
                                 .find('.chatStream').outerHeight() + 'px )',
                         });
-                    $(this).parent().parent().find('.chatViewerlist')
+                    $(this).parent().parent().find('.chatViewerList')
                         .css({
                             'height': 'calc(100% - 35px - ' +
                             $(this).parent().parent()
@@ -418,7 +418,7 @@ class Chat {
                     'height': 'calc(100% - 105px - ' + $(this)
                         .find('.chatStream').outerHeight() + 'px )',
                 });
-            $(this).find('.chatViewerlist')
+            $(this).find('.chatViewerList')
                 .css({
                     'height': 'calc(100% - 35px - ' + $(this)
                         .find('.chatStream').outerHeight() + 'px )',
@@ -454,73 +454,73 @@ class Chat {
     addChatterListAbility_() {
         let channelLC = this.channelName_.toLowerCase();
         let toggleVL = 0;
-        $(document).on('click', '.toggleViewerlist[id$=\'' + channelLC + '\']', function() {
-            // if ($(this).parent().parent().find("div.chatViewerlist")
+        $(document).on('click', '.toggleViewerList[id$=\'' + channelLC + '\']', function() {
+            // if ($(this).parent().parent().find("div.chatViewerList")
             // .css("display").toLowerCase() != "none") {
             if (toggleVL % 2 !== 0) {
-                $(this).parent().parent().find('div.chatViewerlist').hide();
+                $(this).parent().parent().find('div.chatViewerList').hide();
                 $(this).parent().parent().find('div.chatContent').show();
                 $(this).parent().parent().find('div.chatInput').show();
             } else {
                 $(this).parent().parent().find('div.chatContent').hide();
                 $(this).parent().parent().find('div.chatInput').hide();
-                $(this).parent().parent().find('div.chatViewerlist').show();
+                $(this).parent().parent().find('div.chatViewerList').show();
 
-                let viewerlist =
-                    $(this).parent().parent().find('div.chatViewerlist');
+                let viewerList =
+                    $(this).parent().parent().find('div.chatViewerList');
 
                 TwitchApi.getChatterList(channelLC, this, function(data) {
-                    viewerlist.empty();
+                    viewerList.empty();
                     data = data.data;
-                    viewerlist.append('Chatter Count: ' + data.chatter_count +
+                    viewerList.append('Chatter Count: ' + data.chatter_count +
                         '<br /><br />');
 
                     let chatters = data.chatters;
                     if (chatters.moderators.length > 0) {
-                        viewerlist.append('<h3>Moderators</h3>');
+                        viewerList.append('<h3>Moderators</h3>');
                         let modList = '<ul>';
                         for (let i = 0; i < chatters.moderators.length; i++) {
                             modList += '<li>' + chatters.moderators[i] + '</li>';
                         }
                         modList += '</ul><br />';
-                        viewerlist.append(modList);
+                        viewerList.append(modList);
                     }
                     if (chatters.staff.length > 0) {
-                        viewerlist.append('<h3>Staff</h3>');
+                        viewerList.append('<h3>Staff</h3>');
                         let staffList = '<ul>';
                         for (let i = 0; i < chatters.staff.length; i++) {
                             staffList += '<li>' + chatters.staff[i] + '</li>';
                         }
                         staffList += '</ul><br />';
-                        viewerlist.append(staffList);
+                        viewerList.append(staffList);
                     }
                     if (chatters.admins.length > 0) {
-                        viewerlist.append('<h3>Admins</h3>');
+                        viewerList.append('<h3>Admins</h3>');
                         let adminsList = '<ul>';
                         for (let i = 0; i < chatters.admins.length; i++) {
                             adminsList += '<li>' + chatters.admins[i] + '</li>';
                         }
                         adminsList += '</ul><br />';
-                        viewerlist.append(adminsList);
+                        viewerList.append(adminsList);
                     }
                     if (chatters.global_mods.length > 0) {
-                        viewerlist.append('<h3>Global Mods</h3>');
+                        viewerList.append('<h3>Global Mods</h3>');
                         let globalModsList = '<ul>';
                         for (let i = 0; i < chatters.global_mods.length; i++) {
                             globalModsList +=
                                 '<li>' + chatters.global_mods[i] + '</li>';
                         }
                         globalModsList += '</ul><br />';
-                        viewerlist.append(globalModsList);
+                        viewerList.append(globalModsList);
                     }
                     if (chatters.viewers.length > 0) {
-                        viewerlist.append('<h3>Viewers</h3>');
+                        viewerList.append('<h3>Viewers</h3>');
                         let viewersList = '<ul>';
                         for (let i = 0; i < chatters.viewers.length; i++) {
                             viewersList += '<li>' + chatters.viewers[i] + '</li>';
                         }
                         viewersList += '</ul><br />';
-                        viewerlist.append(viewersList);
+                        viewerList.append(viewersList);
                     }
                 });
             }

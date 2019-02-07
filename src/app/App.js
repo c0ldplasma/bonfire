@@ -6,7 +6,6 @@
 
 'use strict';
 import AppUser from './AppUser.js';
-// noinspection ES6CheckImport
 import {version} from '../../package.json';
 import SendIRCConnection from './SendIRCConnection.js';
 import ReceiveIRCConnection from './ReceiveIRCConnection.js';

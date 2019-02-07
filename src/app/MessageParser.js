@@ -17,7 +17,7 @@
 'use strict';
 
 import ChatMessage from './ChatMessage.js';
-import RoomstateMessage from './RoomstateMessage.js';
+import RoomStateMessage from './RoomStateMessage.js';
 import UserMessage from './UserMessage.js';
 import NameColorManager from './NameColorManager.js';
 
@@ -64,17 +64,17 @@ class MessageParser {
         } else if (msgParts[1].localeCompare('PART') === 0) {
             // Ignore PARTs (a user left a channel)
         } else if (msgParts[1].localeCompare('353') === 0) {
-            // Ignore namelist
+            // Ignore name list
         } else if (msgParts[1].localeCompare('366') === 0) {
-            // Ignore end of namelist
+            // Ignore end of name list
         } else if (msgParts[1].localeCompare('MODE') === 0) {
             // Ignore gain/lose of Moderator rights
         } else if (msgParts[2].localeCompare('ROOMSTATE') === 0) {
-            chatMessages = MessageParser.parseRoomstate_(msg, chatName);
+            chatMessages = MessageParser.parseRoomState_(msg, chatName);
         } else if (msgParts[2].localeCompare('USERSTATE') === 0) {
-            // Ignore Userstate
+            // Ignore user state
         } else if (msgParts[2].localeCompare('USERNOTICE') === 0) {
-            chatMessages = this.parseUsernotice_(msg, chatName);
+            chatMessages = this.parseUserNotice_(msg, chatName);
         } else if (msgParts[2].localeCompare('CLEARCHAT') === 0) {
             // ToDo: Bans/Timeouts
         } else if (msgParts[1].localeCompare('HOSTTARGET') === 0) {
@@ -101,14 +101,13 @@ class MessageParser {
         let username = msgParts[1].split('!', 1);
         username = username[0].substring(1, username[0].length);
 
-        let userMessage = msgParts;
-        let metaInfoRaw = userMessage[0].substring(1, userMessage[0].length);
-        let metaInfo = this.getMetaInfoWithColor_(metaInfoRaw.split(';'), username);
+        let metaInfoRaw = msgParts[0].substring(1, msgParts[0].length);
+        let metaInfo = MessageParser.getMetaInfoWithColor_(metaInfoRaw.split(';'), username);
         if (metaInfo.username != null) {
             username = metaInfo.username;
         }
 
-        userMessage = userMessage.slice(4).join(' ');
+        let userMessage = msgParts.slice(4).join(' ');
         userMessage = userMessage.substring(1, userMessage.length);
 
         let action = false;
@@ -132,15 +131,15 @@ class MessageParser {
      * @return {Array.<ChatMessage>} newMessages
      * @private
      */
-    static parseRoomstate_(msg, chatName) {
-        let roomstateMsg = msg.split(' ')[0];
-        roomstateMsg = roomstateMsg.substring(1, roomstateMsg.length);
-        roomstateMsg = roomstateMsg.split(';');
+    static parseRoomState_(msg, chatName) {
+        let roomStateMsg = msg.split(' ')[0];
+        roomStateMsg = roomStateMsg.substring(1, roomStateMsg.length);
+        let roomStates = roomStateMsg.split(';');
         let infoMessage = '';
         let chatInput = $('#' + chatName + ' .chatInput');
         chatInput.find('p').remove();
-        for (let j = 0; j < roomstateMsg.length; j++) {
-            let info = roomstateMsg[j].split('=');
+        for (let j = 0; j < roomStates.length; j++) {
+            let info = roomStates[j].split('=');
             let infoKeyword = info[0];
             switch (infoKeyword) {
                 case 'broadcaster-lang':
@@ -173,7 +172,7 @@ class MessageParser {
                     break;
             }
         }
-        return [new RoomstateMessage(chatName, infoMessage)];
+        return [new RoomStateMessage(chatName, infoMessage)];
     }
 
     /**
@@ -182,21 +181,20 @@ class MessageParser {
      * @return {Array.<ChatMessage>} newMessages
      * @private
      */
-    parseUsernotice_(msg, chatName) {
-        let chatMessages = [];
-
-        let usernoticeMessage = msg.split(' ');
-        usernoticeMessage = usernoticeMessage.slice(4).join(' ');
+    parseUserNotice_(msg, chatName) {
+        let userNoticeMessageParts = msg.split(' ');
+        let userNoticeMessage = userNoticeMessageParts.slice(4).join(' ');
         let metaInfoRaw = msg.substring(1, msg.length).split(' ')[0].split(';');
         let metaInfo = MessageParser.getMetaInfo_(metaInfoRaw);
+        let chatMessages = [];
         chatMessages.push(new ChatMessage(chatName,
             ((metaInfo.systemMsg != null) ? (metaInfo.systemMsg + ' ') : '')));
-        if (usernoticeMessage.length > 0) {
+        if (userNoticeMessage.length > 0) {
             chatMessages.push(this.parseMessage(msg.split(' ')[0] + ' :' +
                 metaInfo.username.toLowerCase() + '!' +
                 metaInfo.username.toLowerCase() + '@' +
                 metaInfo.username.toLowerCase() + '.tmi.twitch.tv PRIVMSG #'
-                + chatName + ' ' + usernoticeMessage)[0]);
+                + chatName + ' ' + userNoticeMessage)[0]);
         }
         return chatMessages;
     }
@@ -208,9 +206,8 @@ class MessageParser {
      * @private
      */
     static parseNotice_(msgParts, chatName) {
-        let noticeMessage = msgParts;
         let slicePoint = msgParts[2].localeCompare('NOTICE') === 0 ? 4 : 3;
-        noticeMessage = noticeMessage.slice(slicePoint).join(' ');
+        let noticeMessage = msgParts.slice(slicePoint).join(' ');
         return [new ChatMessage(chatName, noticeMessage.substring(1, noticeMessage.length))];
     }
 
@@ -240,7 +237,7 @@ class MessageParser {
      * @return {Object} Object with one property for every meta information
      * @private
      */
-    getMetaInfoWithColor_(metaMsg, username) {
+    static getMetaInfoWithColor_(metaMsg, username) {
         let metaInfo = {};
 
         metaInfo.color = '#acacbf';

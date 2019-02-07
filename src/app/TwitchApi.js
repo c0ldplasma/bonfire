@@ -1,6 +1,6 @@
 'use strict';
 
-import TwitchConstants from './TwitchConstants.js';
+import TwitchConstants from './TwitchConstants';
 
 /**
  * Twitch Api calls
@@ -9,7 +9,7 @@ class TwitchApi {
     /**
      * Gets the data to every user in the users parameter
      * Calls the callback function with the JSON Data when request finished
-     * @param {string} users comma seperated list with usernames
+     * @param {string} users comma separated list with usernames
      * @param {object} context sets the Object 'this' is referring to in the callback function
      * @param {function} callback function(data) that gets called after the request finished
      */
@@ -31,7 +31,7 @@ class TwitchApi {
      * @return {data}
      */
     static async getUserFromOAuth() {
-        const data = await $.ajax({
+        return await $.ajax({
             statusCode: {
                 401: function() {
                     window.location.replace(TwitchConstants.AUTHORIZE_URL);
@@ -43,7 +43,6 @@ class TwitchApi {
                 'Authorization': ('OAuth ' + localStorage.accessToken),
             },
         });
-        return data;
     }
 
     /**

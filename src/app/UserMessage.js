@@ -88,8 +88,8 @@ class UserMessage extends ChatMessage {
                     + UserMessage.escapeString_(userMessage.substring(oldAfterEmotePos,
                         parseInt(sortEmotes[k][0]) + diff)) +
                     '<span style=" display: inline-block;" >&#x200b;' +
-                    '<img src=\'https://static-cdn.jtvnw.net/emoticons/v1/'
-                    + sortEmotes[k][2] + '/1.0\' /></span>';
+                    '<img src="https://static-cdn.jtvnw.net/emoticons/v1/'
+                    + sortEmotes[k][2] + '/1.0" alt="{Emote}" /></span>';
 
                 userMessage = imgString +
                     userMessage.substring(parseInt(sortEmotes[k][1])

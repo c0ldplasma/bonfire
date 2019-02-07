@@ -2,9 +2,9 @@
 import ChatMessage from './ChatMessage.js';
 
 /**
- * Represents one roomstate message
+ * Represents one roomState message
  */
-class RoomstateMessage extends ChatMessage {
+class RoomStateMessage extends ChatMessage {
     /**
      * @param {string} chatName Name of the chat the message is for
      * @param {string} content The actual content of the message
@@ -22,4 +22,4 @@ class RoomstateMessage extends ChatMessage {
             'padding-left: 10px;font-weight: 200;">' + this.getContent() + '</p>';
     }
 }
-export default RoomstateMessage;
+export default RoomStateMessage;

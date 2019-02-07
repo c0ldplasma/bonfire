@@ -1,6 +1,6 @@
 'use strict';
 import Chat from './Chat.js';
-//import SimpleBar from '../../public/lib/simplebar.js';
+// import SimpleBar from '../../public/lib/simplebar.js';
 
 /**
  * Represents the whole application
@@ -29,9 +29,18 @@ class ChatManager {
         });
     }
 
+    /**
+     * Setting the IRC Connection for receiving messages.
+     * @param {ReceiveIRCConnection} receiveIrcConnection
+     */
     setReceiveIrcConnection(receiveIrcConnection) {
         this.receiveIrcConnection_= receiveIrcConnection;
     }
+
+    /**
+     * Setting the IRC Connection for sending messages.
+     * @param {SendIRCConnection} sendIrcConnection
+     */
     setSendIrcConnection(sendIrcConnection) {
         this.sendIrcConnection_ = sendIrcConnection;
     }
@@ -63,12 +72,12 @@ class ChatManager {
      */
     removeChat_(event) {
         let channelName = event.data[1].toLowerCase();
-        let thiss = event.data[0];
-        delete thiss.chatList_[channelName];
+        let chatManager = event.data[0];
+        delete chatManager.chatList_[channelName];
         $(document).off('click', '.toggleStream[id$=\'' + channelName + '\']');
         $(this).parent().parent().remove();
-        thiss.receiveIrcConnection_.leaveChat(channelName);
-        thiss.sendIrcConnection_.leaveChat(channelName);
+        chatManager.receiveIrcConnection_.leaveChat(channelName);
+        chatManager.sendIrcConnection_.leaveChat(channelName);
     }
 
     /**
@@ -111,5 +120,4 @@ class ChatManager {
         }
     }
 }
-
 export default ChatManager;

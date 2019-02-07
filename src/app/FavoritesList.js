@@ -146,7 +146,7 @@ class FavoritesList {
             favList.append('<div class="favEntry" id="' + channelLC
                 + '"><img class="profilePic" src="' + ((profilePicURL != null)
                     ? profilePicURL : '/img/defaultProfile.png')
-                + '" /><input class="favEntryAddChatButton" ' +
+                + '" alt="Pic." /><input class="favEntryAddChatButton" ' +
                 'id="' + channelLC + '" type="button" value="' + channel
                 + '"><input class="favEntryRemoveButton" ' +
                 'id="' + channelLC + '" type="button" ></div>');
