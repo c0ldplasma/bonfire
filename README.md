@@ -1,6 +1,6 @@
 # Bonfire - A web based chat client for twitch
 
-Bonfire is a web based chat client for twitch chats. It is still under heavy development and not recommended for general use yet.
+Bonfire is a web based chat client for twitch chats. It is still under heavy development and **not recommended for general use yet**.
 
 You can either use the website version under chats.c0ldplasma.de or download the deskop app based on electron under releases.
 
