@@ -4,14 +4,33 @@ Bonfire is a web based chat client for twitch chats. It is still under heavy dev
 
 You can either use the website version under chats.c0ldplasma.de or download the deskop app based on electron under releases.
 
-# rollup-starter-app
+
+## 
+
+## Deployment
+
+## Built with
+
+* [rollup.js](https://rollupjs.org/guide/en) - A module bundler for JavaScript.
+* [Electron](https://electronjs.org/) - Build cross platform desktop apps with JavaScript, HTML, and CSS.
+
+## Attributions
+
+* [Fire icon](https://www.iconfinder.com/icons/116853/fire_icon) by [SmartIcons](https://www.iconfinder.com/iconeden) licensed under the [Creative Commons (Attribution 2.5 Generic)](https://creativecommons.org/licenses/by/2.5/legalcode) is used as the Bonfire app logo with the following modification: Changed the color to purple. 
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## rollup-starter-app
 
 This repo contains a bare-bones example of how to create an application using Rollup, including importing a module from `node_modules` and converting it from CommonJS.
 
 *See also https://github.com/rollup/rollup-starter-lib*
 
 
-## Getting started
+### Getting started
 
 Clone this repository and install its dependencies:
 
@@ -30,7 +49,3 @@ The `public/index.html` file contains a `<script src='bundle.js'>` tag, which me
 `npm run watch` will continually rebuild the application as your source files change.
 
 `npm run dev` will run `npm start` and `npm run watch` in parallel.
-
-## License
-
-[MIT](LICENSE).
