@@ -16,7 +16,7 @@ You can either use the website version under chats.c0ldplasma.de or download the
 
 ## Attributions
 
-* [Fire icon](https://www.iconfinder.com/icons/116853/fire_icon) by [SmartIcons](https://www.iconfinder.com/iconeden) licensed under the [Creative Commons (Attribution 2.5 Generic)](https://creativecommons.org/licenses/by/2.5/legalcode) is used as the Bonfire app logo with the following modification: Changed the color to purple. 
+* [Fire icon](https://www.iconfinder.com/icons/116853/fire_icon) by [SmartIcons](https://www.iconfinder.com/iconeden) licensed under the [Creative Commons (Attribution 2.5 Generic)](https://creativecommons.org/licenses/by/2.5/legalcode) is used as the Bonfire app logo with the following modifications made: - Changed the color to purple. 
 
 
 ## License
