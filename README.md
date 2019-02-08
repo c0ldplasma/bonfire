@@ -1,3 +1,9 @@
+# Bonfire - A web based chat client for twitch
+
+Bonfire is a web based chat client for twitch chats. It is still under heavy development and not recommended for general use yet.
+
+You can either use the website version under chats.c0ldplasma.de or download the deskop app based on electron under releases.
+
 # rollup-starter-app
 
 This repo contains a bare-bones example of how to create an application using Rollup, including importing a module from `node_modules` and converting it from CommonJS.
