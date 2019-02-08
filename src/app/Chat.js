@@ -76,14 +76,18 @@ class Chat {
      */
     loadRecentMessages_() {
         TwitchApi.getRecentMessages(this.channelId_, this, function(data) {
-            console.log(data);
-            let recentMessages = JSON.parse(data).messages;
-            for (let j = 0; j < recentMessages.length; j++) {
-                let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
-                for (let i = 0; i < chatMessages.length; i++) {
-                    // noinspection JSPotentiallyInvalidUsageOfClassThis
-                    this.addMessage(chatMessages[i]);
+            if (data.localeCompare('') !== 0) {
+                let recentMessages = JSON.parse(data).messages;
+                for (let j = 0; j < recentMessages.length; j++) {
+                    let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
+                    for (let i = 0; i < chatMessages.length; i++) {
+                        // noinspection JSPotentiallyInvalidUsageOfClassThis
+                        this.addMessage(chatMessages[i]);
+                    }
                 }
+            } else {
+                console.log('Recent messages could not be loaded for channel '
+                    + this.channelName_ + '!');
             }
         });
     }
@@ -162,33 +166,32 @@ class Chat {
     getHtml() {
         let channelLC = this.channelName_.toLowerCase();
         return `<div class="chat" id="${channelLC}">
-        <div class="chatHeader">
-        <button class="toggleViewerList" id="${channelLC}"></button>
-        <span>${this.channelName_}</span>
-        <button class="removeChat" id="${channelLC}"></button>
-        <button class="toggleStream" id="${channelLC}"></button>
-        </div>
-        <div class="chatContent" id="${channelLC}scrollArea">
-        <div class="chatMessageList" id="${channelLC}contentArea"></div>
-        </div>
-        <div class="chatInput" id="${channelLC}">
-        <div class="chatNewMessagesInfo" id="${channelLC}">More messages below.</div>
-        <img class="kappa" src="/img/Kappa.png" alt="E"/><textarea maxlength="500"
-        class="chatInputField"
-        id="${channelLC}"
-        placeholder="Send a message..."></textarea>
-        <div class="emoteMenu">
-        <div class="emotes">
-        <div class="bttvEmotes" style="width: 100%;"><h3>BTTV Emotes</h3></div>
-        <div class="bttvChannelEmotes" style="width: 100%;"><h3>BTTV Channel Emotes</h3>
-        </div>
-        <div class="ffzEmotes" style="width: 100%;"><h3>FFZ Emotes</h3></div>
-        <div class="ffzChannelEmotes" style="width: 100%;"><h3>FFZ Channel Emotes</h3></div>
-        </div>
-        </div>
-        </div>
-        <div class="chatViewerList" id="${channelLC}"></div>
-        </div>`;
+                <div class="chatHeader">
+                <button class="toggleViewerList" id="${channelLC}"></button>
+                <span>${this.channelName_}</span>
+                <button class="removeChat" id="${channelLC}"></button>
+                <button class="toggleStream" id="${channelLC}"></button>
+                </div>
+                <div class="chatContent" id="${channelLC}scrollArea">
+                <div class="chatMessageList" id="${channelLC}contentArea"></div>
+                </div>
+                <div class="chatInput" id="${channelLC}">
+                <div class="chatNewMessagesInfo" id="${channelLC}">More messages below.</div>
+                <img class="kappa" src="/img/Kappa.png" alt="E"/><textarea maxlength="500"
+                class="chatInputField"
+                id="${channelLC}"
+                placeholder="Send a message..."></textarea>
+                <div class="emoteMenu"><div class="emotes">
+                <div class="bttvEmotes" style="width: 100%;"><h3>BTTV Emotes</h3></div>
+                <div class="bttvChannelEmotes" style="width: 100%;"><h3>BTTV Channel Emotes</h3>
+                </div>
+                <div class="ffzEmotes" style="width: 100%;"><h3>FFZ Emotes</h3></div>
+                <div class="ffzChannelEmotes" style="width: 100%;"><h3>FFZ Channel Emotes</h3></div>
+                </div>
+                </div>
+                </div>
+                <div class="chatViewerList" id="${channelLC}"></div>
+                </div>`;
     }
 
     /**
@@ -446,6 +449,8 @@ class Chat {
             if ($newMessagesInfo.is(':hidden')) {
                 $chatContent.scrollTop($chatContent[0].scrollHeight + 50);
             }
+            let scroller = $('.chatContent[id$=\'' + channelLC + 'scrollArea\']').baron();
+            scroller.update();
         });
     }
     /**

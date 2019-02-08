@@ -1,6 +1,5 @@
 'use strict';
 import Chat from './Chat.js';
-// import SimpleBar from '../../public/lib/simplebar.js';
 
 /**
  * Represents the whole application

@@ -56,6 +56,7 @@ html, body {
 	white-space: nowrap;
 	font-size: 20px;
 	color: #eee;
+	/*noinspection CssInvalidPropertyValue*/
 	overflow-x: overlay;
 	overflow-y: hidden;
 	z-index: 100;
@@ -199,6 +200,7 @@ html, body {
 	height: 70px;
 	background-color: #201c2b;
 	position: relative;
+	line-height: 1.5;
 }
 .chatInput .kappa {
 	opacity: 0.6;
@@ -226,8 +228,10 @@ html, body {
     white-space: pre-wrap;
 	padding: 5px 7px 5px 5px;
 	text-align: center;
+	font-size: 0;
 }
 .emoteMenu .emotes {
+	margin-top: 0;
 	overflow-y: scroll;
 	overflow-x: hidden;
 	width: 100%;
@@ -263,11 +267,11 @@ html, body {
 #main-chat-area .chat .chatInput .chatInputField {
 	outline: none;
 	width: calc(100% - 20px);
-	height: 30px;
+	height: 35px;
 	//background-color: #17141f;
-  background-color: transparent;
-  border: none;
-  border-bottom: 2px solid gray;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid gray;
 	//border: 1px solid #505050;
 	resize: none;
 	//border-radius: 1px;
@@ -279,8 +283,8 @@ html, body {
 }
 #main-chat-area .chat .chatInput .chatInputField:focus {
 	border-bottom: 2px solid #673ab7;
-  -webkit-transition: border-bottom 0.35s; /* Safari */
-  transition: border-bottom 0.35s;
+    -webkit-transition: border-bottom 0.35s; /* Safari */
+    transition: border-bottom 0.35s;
 }
 #main-chat-area .chat .chatViewerList {
   width: 100%;

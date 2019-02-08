@@ -43,7 +43,6 @@ class AppUser {
      */
     async requestAppUserData() {
         return await TwitchApi.getUserFromOAuth().then((data) => {
-            console.log(data);
             if (typeof(data.login) !== 'undefined') {
                 this.userName_ = data.login;
                 // noinspection JSUnusedGlobalSymbols

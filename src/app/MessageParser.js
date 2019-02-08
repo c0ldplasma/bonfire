@@ -45,6 +45,7 @@ class MessageParser {
      */
     parseMessage(msg) {
         let msgParts = msg.split(' ');
+        console.log(msg);
 
         let chatName = MessageParser.parseChatName_(msgParts);
 
