@@ -1,7 +1,7 @@
-import resolve from 'rollup-plugin-node-resolve';
-import json from 'rollup-plugin-json'
-import commonjs from 'rollup-plugin-commonjs';
-import uglify from 'rollup-plugin-uglify';
+import resolve from '@rollup/plugin-node-resolve';
+import json from '@rollup/plugin-json';
+import commonjs from '@rollup/plugin-commonjs';
+import { terser } from 'rollup-plugin-terser';
 
 // `npm run build` -> `production` is true
 // `npm run dev` -> `production` is false
@@ -18,6 +18,6 @@ export default {
 		json(),
 		resolve(), // tells Rollup how to find date-fns in node_modules
 		commonjs(), // converts date-fns to ES modules
-		production && uglify() // minify, but only in production
+		production && terser() // minify, but only in production
 	]
 };
