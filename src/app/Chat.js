@@ -75,9 +75,9 @@ class Chat {
      * @private
      */
     loadRecentMessages_() {
-        TwitchApi.getRecentMessages(this.channelId_, this, function(data) {
-            if (data.localeCompare('') !== 0) {
-                let recentMessages = JSON.parse(data).messages;
+        TwitchApi.getRecentMessages(this.channelName_, this, function(data) {
+            if (typeof data === 'object' && data !== null && data.hasOwnProperty('messages')) {
+                let recentMessages = data.messages;
                 for (let j = 0; j < recentMessages.length; j++) {
                     let chatMessages = this.messageParser_.parseMessage(recentMessages[j]);
                     for (let i = 0; i < chatMessages.length; i++) {

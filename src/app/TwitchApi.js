@@ -20,10 +20,14 @@ class TwitchApi {
             dataType: 'json',
             headers: {
                 'Client-ID': TwitchConstants.CLIENT_ID,
+                'Authorization': ('Bearer ' + localStorage.accessToken),
             },
             data: {login: users},
             async: true,
-        }).done(callback);
+        }).done(callback).fail(function(jqXHR, textStatus) {
+            console.log("Request failed: " + textStatus)
+            console.log(jqXHR);
+        });
     }
 
     /**
@@ -65,17 +69,16 @@ class TwitchApi {
     // noinspection JSUnusedGlobalSymbols
     /**
      * Gets recent messages from the specified chat
-     * @param {string} chatId
+     * @param {string} chatName
      * @param {object} context sets the Object 'this' is referring to in the callback function
      * @param {function} callback function(data) that gets called after the request finished
      */
-    static getRecentMessages(chatId, context, callback) {
+    static getRecentMessages(chatName, context, callback) {
         // Download recent messages
         $.ajax({
             context: context,
             type: 'GET',
-            url: ('https://chats.c0ldplasma.de/php/recentMessages.php'),
-            data: {chatId: chatId},
+            url: ('https://recent-messages.robotty.de/api/v2/recent-messages/' + chatName),
             async: true,
         }).done(callback);
     }

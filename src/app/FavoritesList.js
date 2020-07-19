@@ -82,9 +82,11 @@ class FavoritesList {
      * @param {Array.<string>} channelArray channel name or null
      */
     addFavToList(channelArray) {
-        let channels = document.getElementById('newFavInput').value.split(',');
+        let channels;
         if ($.isArray(channelArray)) {
             channels = channelArray;
+        } else {
+            channels = document.getElementById('newFavInput').value.replace(/\s+/g, '').split(',');
         }
         let channelsCount = channels.length;
 
