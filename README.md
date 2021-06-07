@@ -12,7 +12,7 @@ These instructions will get you a copy of Bonfire up and running on your local m
 
 First install [Node.js](https://nodejs.org/en/), then run the following commands in console:
 ```bash
-git clone https://code.flamari.com/public-repos/bonfire
+git clone https://github.com/c0ldplasma/bonfire
 cd bonfire
 npm install
 ```
