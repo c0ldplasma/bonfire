@@ -33,7 +33,9 @@ The `public/index.html` file contains a `<script src='bundle.js'>` tag, which me
 
 ### Website
 
-Just copy the public folder content to your webroot and check if your php is configured correctly so that the php/recentMessages.php is working. It is used for loading the recent chat messages from the inofficial twitch api which is not directly accessible from client side because of cross domain policies.
+To host it yourself on a server you need to create your own ClientID through the Twitch development website ( https://dev.twitch.tv/console/apps ) and enter the URL where the website is deployed. After that replace ClientID and the URL in src/app/TwitchConstants.js
+
+Then copy the public folder content to your webroot and check if your php is configured correctly so that the php/recentMessages.php is working. It is used for loading the recent chat messages from the inofficial twitch api which is not directly accessible from client side because of cross domain policies.
 
 ### Desktop App
 
