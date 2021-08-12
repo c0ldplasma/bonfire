@@ -10,7 +10,7 @@ class TwitchConstants {
      */
     static get CLIENT_ID() {
         // noinspection SpellCheckingInspection
-        return 'xllef7inid2mbeqoaj2o6bsohg7pz7';
+        return '<Replace with Twitch ClientID>';
     }
 
     /**
@@ -26,7 +26,7 @@ class TwitchConstants {
      * @constructor
      */
     static get SELF_URL() {
-        return 'http://localhost:5000/';
+        return '<Replace with Twitch RedirectURL used while creating the ClientID>';
     }
 
     /**
