@@ -26,7 +26,7 @@ class TwitchConstants {
      * @constructor
      */
     static get SELF_URL() {
-        return '<Replace with Twitch RedirectURL used while creating the ClientID>';
+        return '<Replace with URL of your website>';
     }
 
     /**
